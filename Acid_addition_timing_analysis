@@ -1,0 +1,28 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+#setup plotting parameters to make everything bigger
+plt.rcParams.update({         # Set standard fontsizes for plot labels
+    "axes.labelsize": 16,     # x and y axis labels
+    "axes.titlesize": 18,     # plot title
+    "xtick.labelsize": 16,    # x tick labels
+    "ytick.labelsize": 16,    # y tick labels
+    "legend.fontsize": 15,    # legend text
+    "figure.titlesize": 20,   # figure title if used
+     })
+
+
+#import csv file from local path
+path = "data/vindta/r2co2/Nico/acid_timings_titration.csv"
+df = pd.read_csv(path)
+
+#plot all bottles
+plt.figure(figsize=(8,6))
+for col in df.columns[1:]:  # skip acid column
+    plt.plot(df["acid added (mL)"], df[col], marker="o", label=col)
+plt.xlabel("Acid added (mL)")
+plt.ylabel("Time since previous addition (seconds)")
+plt.title("Time vs Acid Added")
+plt.legend()
+plt.show()
+

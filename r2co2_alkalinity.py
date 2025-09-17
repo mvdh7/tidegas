@@ -15,9 +15,12 @@ dbs = calk.read_dbs("data/vindta/r2co2/Nico.dbs", file_path=file_path)
 # (because R2-CO2 just saves zeroes in the titrant_amount column!)
 tfiles = os.listdir(file_path)
 for i, row in dbs.iterrows():
-    datfile = os.path.join(row.file_path, row.file_name)
-    bakfile = os.path.join(row.file_path, row.file_name)[:-3] + "bak"
-    if row.file_name not in tfiles:
+    # datfile = os.path.join(row.file_path, row.file_name)
+    datfile = row.file_path + '/' + row.file_name
+    bakfile = datfile[:-3] + "bak"
+
+    if row.file_name[:-3] + "bak" not in tfiles:
+        print(row.file_name)
         shutil.copyfile(datfile, bakfile)
         dat_data = calk.read_dat(bakfile)
         calk.write_dat(
@@ -30,7 +33,7 @@ for i, row in dbs.iterrows():
             mode="w",
             line0=f"Based on '{bakfile}'",
         )
-
+#%%
 # Now we can proceed with Calkulate as normal
 dbs["titrant_molinity"] = 0.1  # guess for now, calibrate later
 dbs["salinity"] = 30  # guess for now, measure later
