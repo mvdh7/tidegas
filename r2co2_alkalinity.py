@@ -58,3 +58,5 @@ tt = dbs.to_Titration(1)
 tt.plot_pH()
 tt.plot_components()
 tt.plot_alkalinity()
+
+print(dbs.alkalinity)
