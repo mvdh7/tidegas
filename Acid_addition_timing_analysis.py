@@ -98,7 +98,17 @@ def compare_days(stats, df_long, days):
     plt.show()
 
 #%%
-plot_day(df_long, 1609)
-plot_day(df_long, 1709)
+days_measured = [1609,1709,1809]
+plot_all_individual = True
 
-compare_days(stats, df_long,[1609, 1709])
+if plot_all_individual:
+    for i,date in enumerate(days_measured):
+        print(date)        
+        plot_day(df_long, date)
+
+#plot a specific day
+#plot_day(df_long,1709)
+
+compare_days(stats,df_long, days_measured)
+#compare specific days
+#compare_days(stats, df_long,[1609, 1709,1809])
