@@ -63,7 +63,7 @@ def plot_day(df_long, day):
     
     # Add sample size N
     n_bottles = subset["bottle_num"].nunique()
-    plt.title(f"Day {day} – Timings vs Acid Added (N={n_bottles})")
+    plt.title(f"Day {day} - Timings vs Acid Added (N={n_bottles})")
     
     plt.xlabel("Acid added (mL)")
     plt.ylabel("Timing")

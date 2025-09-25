@@ -1,3 +1,25 @@
-﻿,,date,sample/junk,bottle,Alkalinity ,,,,,,,,,,DIC,Think of converting from file using UTC,,,
-Description,,,,,the file name as given in the data folder,"the starting time in HH:MM:SS, or 0",the end time in HH:MM:SS or total seconds TBC,are detailed acid timings available in acid_timings_titration? Yes or No,total amount of acid added in mL,TA value given immediately after the titration in MARIANDA software,TA value calculated in calkulate,EMF value with 0 acid added,EMF0 value from the fitting procedure in calkulate,,the file name as given in the data,starting time in HH:MM:SS,sample volume used ,quick calculation based on total counts/(volume *Faraday's constant) no correction for drift and in ug/L,final calculated DIC value with correction 
-,,,,,file name alkalinity,start time ,end time,detailed timings?,acid added (mL) ,Vindta raw alkalinity,calkulate alkalinity,First emf value,emf0 value ,notes ,file name DIC,start time,sample volume (mL),raw DIC ug/L ,Calculated DIC ug/kg 
+﻿Description,,date,sample/junk,bottle,Alkalinity file name ,"the starting time in HH:MM:SS, or 0",the end time in HH:MM:SS or total seconds TBC,are detailed acid timings available in acid_timings_titration? Yes or No,total amount of acid added in mL,How much acid is added in each step?,TA value given immediately after the titration in MARIANDA software,TA value calculated in calkulate,EMF value with 0 acid added,EMF0 value from the fitting procedure in calkulate,,,the file name as given in the data,starting time in HH:MM:SS,sample volume used ,quick calculation based on total counts/(volume *Faraday's constant) no correction for drift and in ug/L,final calculated DIC value with correction 
+,,,,,file name alkalinity,start time ,end time,detailed timings?,acid added (mL) ,acid increments (mL),Vindta raw alkalinity,calkulate alkalinity,First emf value,emf0 value,notes ,,file name DIC,start time,sample volume (mL),raw DIC ug/L ,Calculated DIC ug/kg 
+,,16-Sep,Junk,1,0-0  0  (0)junk-250916-01,,,,,,,,,,first measurement bad,,,,,,
+,,16-Sep,Junk,2,0-0  0  (0)junk-250916-02,,,,,,,,,,,,,,,,
+,,16-Sep,Junk,3,0-0  0  (0)junk-250916-03,,,,,,,,,,,,,,,,
+,,16-Sep,Junk,4,0-0  0  (0)junk-250916-04,,,,,,,,,,,,,,,,
+,,16-Sep,Junk,5,0-0  0  (0)junk-250916-05,,,,,,,,,,,,,,,,
+,,16-Sep,Junk,6,0-0  0  (0)junk-250916-06,,,,,,,,,,,,,,,,
+,,16-Sep,Junk,7,0-0  0  (0)junk-250916-07,,,,,,,,,,,,,,,,
+,,16-Sep,Junk,8,0-0  0  (0)junk-250916-08,,,,,,,,,,Cell not full ,,,,,,
+,,16-Sep,Junk,9,0-0  0  (0)junk-250916-09,,,,,,,,,,,,,,,,
+,,16-Sep,Junk,10,0-0  0  (0)junk-250916-10,,,,,,,,,,,,,,,,
+,,16-Sep,Junk,11,0-0  0  (0)junk-250916-11,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,1,0-0  0  (0)junk-250917-01,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,2,0-0  0  (0)junk-250917-02,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,3,0-0  0  (0)junk-250917-03,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,4,0-0  0  (0)junk-250917-04,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,5,0-0  0  (0)junk-250917-05,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,6,0-0  0  (0)junk-250917-06,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,7,0-0  0  (0)junk-250917-07,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,8,0-0  0  (0)junk-250917-08,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,9,0-0  0  (0)junk-250917-09,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,10,0-0  0  (0)junk-250917-10,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,11,0-0  0  (0)junk-250917-11,,,,,,,,,,,,,,,,
+,,17-Sep,Junk,12,0-0  0  (0)junk-250917-12,,,,,,,,,,,,,,,,

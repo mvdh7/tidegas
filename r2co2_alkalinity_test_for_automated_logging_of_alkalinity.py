@@ -1,7 +1,7 @@
 # %%
 import os
 import shutil
-
+import pandas as pd
 import calkulate as calk
 import numpy as np
 
@@ -11,20 +11,27 @@ dbs = calk.read_dbs("data/vindta/r2co2/Nico.dbs", file_path=file_path)
 
 # For each titration file, if there isn't already a backup copy:
 # 1. Make a backup copy (with extension .bak).
-# 2. Open the .dat, replace first column with correct volumes, and save.
+# TODO 2. Extract the value of the first EMF reading and store it (for adding it in the log later)
+# 3. Open the .dat, replace first column with correct volumes, TODO directly extracted form the log, and save.
 # (because R2-CO2 just saves zeroes in the titrant_amount column!)
+
+
 tfiles = os.listdir(file_path)
 
+#store a list of ALL first EMF values, which can be added to the dataframe later
+EMF_first = []
 
 for i, row in dbs.iterrows():
     # datfile = os.path.join(row.file_path, row.file_name)
     datfile = row.file_path + '/' + row.file_name
     bakfile = datfile[:-3] + "bak"
-   
+    dat_data = calk.read_dat(bakfile)
+    
+    EMF_first.append(dat_data.measurement[0])
     if row.file_name[:-3] + "bak" not in tfiles:
         print(row.file_name)
         shutil.copyfile(datfile, bakfile)
-        dat_data = calk.read_dat(bakfile)
+        
         calk.write_dat(
             datfile,
             # The line below sets the correct titrant_amount values
@@ -63,12 +70,37 @@ tt.plot_components()
 tt.plot_alkalinity()
 
 #%%
-print((dbs.alkalinity))
-# TESTING CODE
-# automatically update calkulated alkalinity in logbook file
 
-reduced_dbs = dbs[["bottle","alkalinity","emf0","pH_init"]]
+# TESTING CODE
+# goal is to automatically update calkulated alkalinity in logbook file
+
+# method is to take elements from the DBS, and assign them to specific columns based on file name in the logbook
+
+# bonus is adding the first measurement of EMF as well
+
+reduced_dbs = dbs[["file_name","alkalinity","emf0","pH_init"]]
+reduced_dbs["EMF first"] = np.array(EMF_first)
 test_alkalinity = np.array(dbs["alkalinity"])
 print(test_alkalinity)
 print(tt.file_name[:-4])
+
+excel_df = pd.read_excel("Logbook_automated_by_python_testing.xlsx").set_index("file name alkalinity")
+
+# Prepare reduced dataframe with matching column names
+update_df = reduced_dbs.set_index("file_name")[["alkalinity", "EMF first", "emf0"]]
+update_df.rename(columns={
+    "alkalinity": "calkulate alkalinity",
+    "EMF first": "First emf value",
+    "emf0": "emf0 value"
+}, inplace=True)
+
+# Update in place
+excel_df.update(update_df)
+
+# Save back
+excel_df.reset_index().to_excel("Logbook_automated_by_python_testing.xlsx", index=False)
+
+
+
+
 
