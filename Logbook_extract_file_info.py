@@ -1,15 +1,43 @@
 import re
 import os
-from pathlib import Path
 import pandas as pd
 from datetime import datetime
-
+import calkulate as calk
+import shutil
+import numpy as np
 # ---------- CONFIG ----------
 # Path to your existing Excel file
-excel_file = "logbook_automated_by_python_testing.xlsx"
+excel_file = "logbook_automated_by_python_testing_2.xlsx"
 
 # Folder containing your data files
-folder_path = "data/vindta/r2co2/Nico"
+file_path = "data/vindta/r2co2/Nico"
+# Import dbs file
+dbs = calk.read_dbs("data/vindta/r2co2/Nico.dbs", file_path=file_path)
+
+
+# For each titration file, if there isn't already a backup copy:
+# 1. Make a backup copy (with extension .bak).
+# TODO 2. Extract the value of the first EMF reading and store it (for adding it in the log later)
+# 3. Open the .dat, replace first column with correct volumes, TODO directly extracted form the log, and save.
+# (because R2-CO2 just saves zeroes in the titrant_amount column!)
+
+tfiles = os.listdir(file_path)
+
+#create an empty list for storing ALL first EMF values, which can be added to the dataframe later
+EMF_first = []
+
+for i, row in dbs.iterrows():
+    # datfile = os.path.join(row.file_path, row.file_name)
+    datfile = row.file_path + '/' + row.file_name
+    bakfile = datfile[:-3] + "bak"
+    dat_data = calk.read_dat(bakfile)
+    EMF_first.append(dat_data.measurement[0]) #append the first measurement of EMF 
+    
+    if row.file_name[:-3] + "bak" not in tfiles:
+        print(row.file_name)
+        shutil.copyfile(datfile, bakfile) #copy the datafile into a backup file (still without correct acid addition)
+        
+        
 # Read existing Excel
 df = pd.read_excel(excel_file)
 
@@ -17,7 +45,7 @@ df = pd.read_excel(excel_file)
 pattern = re.compile(r'(junk|sample)-(\d{6})-(\d+)', re.I)
 
 # Only process .dat files
-dat_files = [f for f in os.listdir(folder_path) if f.lower().endswith('.dat')]
+dat_files = [f for f in os.listdir(file_path) if f.lower().endswith('.dat')]
 
 rows = []
 
@@ -39,13 +67,14 @@ for file in dat_files:
             "date": date_fmt,
             "sample/junk": sample_type,
             "bottle": bottle,
-            "file name alkalinity": file  # add full file name
+            "file name alkalinity": file,  # add full file name
         })
 
 # Build DataFrame
 df_files = pd.DataFrame(rows)
-
+df_files["First emf value"] = np.array(EMF_first)
 # Sort by date then bottle
+
 df_files['date_sort'] = pd.to_datetime(df_files['date'], format='%d-%b', errors='coerce')
 df_files.sort_values(by=['date_sort', 'bottle'], inplace=True)
 df_files.reset_index(drop=True, inplace=True)
@@ -54,7 +83,7 @@ df_files.drop(columns=['date_sort'], inplace=True)
 # Update the existing Excel sheet
 # Make sure we don’t overwrite other columns
 # Assuming row count matches
-for col in ["date", "sample/junk", "bottle", "file name alkalinity"]:
+for col in ["date", "sample/junk", "bottle", "file name alkalinity","First emf value"]:
     if col in df.columns:
         df[col] = df_files[col]
     else:

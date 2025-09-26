@@ -84,7 +84,7 @@ test_alkalinity = np.array(dbs["alkalinity"])
 print(test_alkalinity)
 print(tt.file_name[:-4])
 
-excel_df = pd.read_excel("Logbook_automated_by_python_testing.xlsx").set_index("file name alkalinity")
+excel_df = pd.read_excel("Logbook_automated_by_python_testing.xlsx").set_index("Alkalinity file name")
 
 # Prepare reduced dataframe with matching column names
 update_df = reduced_dbs.set_index("file_name")[["alkalinity", "EMF first", "emf0"]]
@@ -98,9 +98,6 @@ update_df.rename(columns={
 excel_df.update(update_df)
 
 # Save back
-excel_df.reset_index().to_excel("Logbook_automated_by_python_testing.xlsx", index=False)
-
-
-
+excel_df.to_excel("Logbook_automated_by_python_testing.xlsx", index=False)
 
 
