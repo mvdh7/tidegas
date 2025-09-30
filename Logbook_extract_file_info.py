@@ -5,37 +5,36 @@ from datetime import datetime
 import calkulate as calk
 import shutil
 import numpy as np
-# ---------- CONFIG ----------
-# Path to your existing Excel file
-excel_file = "logbook_automated_by_python_testing_2.xlsx"
+# Path to your existing logbook excel file
+excel_file = "logbook_automated_by_python_testing.xlsx"
 
 # Folder containing your data files
 file_path = "data/vindta/r2co2/Nico"
 # Import dbs file
 dbs = calk.read_dbs("data/vindta/r2co2/Nico.dbs", file_path=file_path)
 
-
 # For each titration file, if there isn't already a backup copy:
 # 1. Make a backup copy (with extension .bak).
-# TODO 2. Extract the value of the first EMF reading and store it (for adding it in the log later)
-# 3. Open the .dat, replace first column with correct volumes, TODO directly extracted form the log, and save.
-# (because R2-CO2 just saves zeroes in the titrant_amount column!)
+# 2. Extract the value of the first EMF reading and write it in the log
+# 3. Extract the file name, type of sample (Junk/other/etc.), date and number from the file name and write it in the log
+
 
 tfiles = os.listdir(file_path)
-
 #create an empty list for storing ALL first EMF values, which can be added to the dataframe later
 EMF_first = []
 
 for i, row in dbs.iterrows():
     # datfile = os.path.join(row.file_path, row.file_name)
     datfile = row.file_path + '/' + row.file_name
-    bakfile = datfile[:-3] + "bak"
-    dat_data = calk.read_dat(bakfile)
-    EMF_first.append(dat_data.measurement[0]) #append the first measurement of EMF 
-    
     if row.file_name[:-3] + "bak" not in tfiles:
         print(row.file_name)
+        bakfile = datfile[:-3] + "bak" #has to be a better way to do this
         shutil.copyfile(datfile, bakfile) #copy the datafile into a backup file (still without correct acid addition)
+    
+    dat_data = calk.read_dat(datfile)
+    EMF_first.append(dat_data.measurement[0]) #append the first measurement of EMF 
+    
+  
         
         
 # Read existing Excel
@@ -44,8 +43,13 @@ df = pd.read_excel(excel_file)
 # Pattern: match junk/sample, YYMMDD, bottle number
 pattern = re.compile(r'(junk|sample)-(\d{6})-(\d+)', re.I)
 
+
 # Only process .dat files
 dat_files = [f for f in os.listdir(file_path) if f.lower().endswith('.dat')]
+
+#create exceptions for single line dat files (aborted measurements)
+dat_files.remove("0-0  0  (0)junk-250930-01.dat")
+
 
 rows = []
 

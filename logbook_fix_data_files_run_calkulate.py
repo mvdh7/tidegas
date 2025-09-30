@@ -8,11 +8,21 @@ import numpy as np
 # Import dbs file
 file_path = "data/vindta/r2co2/Nico"
 dbs = calk.read_dbs("data/vindta/r2co2/Nico.dbs", file_path=file_path)
-excel_df = pd.read_excel("Logbook_automated_by_python_testing_2.xlsx")
+
+excel_file = "logbook_automated_by_python_testing.xlsx"
+
+excel_df = pd.read_excel(excel_file)
 
 tfiles = os.listdir(file_path)
 
 
+#this script loads the logbook and transforms it into a dataframe
+#From this dataframe input parameters are extracted, and output is saved in the logbook
+#inputs: acid increments (mL), Titrant Molinity, Salinity, Calculated DIC ug/kg, raw DIC ug/L, Placeholder DIC
+
+
+# the column acid increments (mL) is used to update the datfile, using the correct spacing in between datapoints
+# TODO Ensure that the last value is also added to the datfile, making a new backup?
 
 acid_increment  = excel_df["acid increments (mL)"]
 for i, row in dbs.iterrows():
@@ -35,16 +45,18 @@ for i, row in dbs.iterrows():
 
 
 #%%
-# Initialize the variables used in calkulate from the excel file 
+# Initialize the variables used in calkulate from the excel file, takes the entire column
 dbs["titrant_molinity"]  = excel_df["Titrant Molinity"]  # Extract directly from excel, default = 0.1
 dbs["salinity"] =excel_df["Salinity"]  # Extract directly from excel, default = 30
-dbs["dic"] = ( excel_df["Calculated DIC ug/kg"]
-    .combine_first(excel_df["raw DIC ug/L"])
-    .combine_first(excel_df["Placeholder DIC"]))    #take fpreferably the calculated DIC, but if not, take the next best or the placeholder (set to 2300 ish)
-dbs["temperature_override"] = 25  # as the files record 0 °C
+
+# ???DIC values are different, some measurements might not have corresponding DIC values
+# ??? for the alkalinity measurement the DIC at 0 (if available, else from the same batch?) acid added should be taken?
+# prefereably used the calclated value, think of workflow, calculate reference DIC for each batch? 
+dbs["dic"] = excel_df["Reference DIC (ug/kg)"]
+dbs["temperature_override"] = excel_df["Temperature"]  # Uses the temperature from the logbook
 
 # Set bad files to ignore
-dbs["file_good"] = ~dbs.bottle.isin(["junk-250916-01","junk-250916-08"])
+dbs["file_good"] = ~dbs.bottle.isin(["junk-250916-01","junk-250916-08","junk-250930-01"])
 dbs.solve()
 
 # TODO Workaround for density storing bug in v23.7.0
@@ -57,14 +69,10 @@ dbs["analyte_mass"] = (
 )
 
 #%%
-
 # TESTING CODE
 # goal is to automatically update calkulated alkalinity in logbook file
 
 # method is to take elements from the DBS, and assign them to specific columns based on file name in the logbook
-
-# bonus is adding the first measurement of EMF as well
-
 reduced_dbs = dbs[["file_name","alkalinity","emf0","pH_init"]]
 test_alkalinity = np.array(dbs["alkalinity"])
 print(test_alkalinity)
@@ -79,6 +87,6 @@ update_df.rename(columns={"alkalinity": "calkulate alkalinity",
 excel_df.update(update_df)
 
 # Save back
-excel_df.to_excel("Logbook_automated_by_python_testing_2.xlsx", index=False)
+excel_df.to_excel(excel_file, index=False)
 
 

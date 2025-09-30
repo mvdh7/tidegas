@@ -98,7 +98,7 @@ def compare_days(stats, df_long, days):
     plt.show()
 
 #%%
-days_measured = [1609,1709,1809]
+days_measured = [1609,1709,1809,3009]
 plot_all_individual = True
 
 if plot_all_individual:
