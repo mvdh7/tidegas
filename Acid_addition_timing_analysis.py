@@ -63,10 +63,10 @@ def plot_day(df_long, day):
     
     # Add sample size N
     n_bottles = subset["bottle_num"].nunique()
-    plt.title(f"Day {day} - Timings vs Acid Added (N={n_bottles})")
+    plt.title(f"{day[0:2]}-{day[2:4]} - Timings vs Acid Added (N={n_bottles})")
     
     plt.xlabel("Acid added (mL)")
-    plt.ylabel("Timing")
+    plt.ylabel("Timing (s)")
     plt.legend()
     plt.grid(True, linestyle="--", alpha=0.5)
     plt.show()
@@ -81,7 +81,7 @@ def compare_days(stats, df_long, days):
         
         # Sample size for this day
         n_bottles = df_long[df_long["day"] == str(day)]["bottle_num"].nunique()
-        label = f"Day {day} (N={n_bottles})"
+        label = f"{day[0:2]}-{day[2:4]} (N={n_bottles})"
         
         plt.plot(subset["acid added (mL)"], subset["mean"], 
                  marker="s", label=label)
@@ -91,14 +91,14 @@ def compare_days(stats, df_long, days):
                          alpha=0.2)
     
     plt.xlabel("Acid added (mL)")
-    plt.ylabel("Timing (mean ± std)")
+    plt.ylabel("Timing (mean ± std) (s)")
     plt.title("Comparison between days")
     plt.legend()
     plt.grid(True, linestyle="--", alpha=0.5)
     plt.show()
 
 #%%
-days_measured = [1609,1709,1809,3009]
+days_measured = ["1609","1709","1809","3009","0110","0310"]
 plot_all_individual = True
 
 if plot_all_individual:

@@ -49,6 +49,7 @@ dat_files = [f for f in os.listdir(file_path) if f.lower().endswith('.dat')]
 
 #create exceptions for single line dat files (aborted measurements)
 dat_files.remove("0-0  0  (0)junk-250930-01.dat")
+dat_files.remove("0-0  0  (0)junk-251001-06-2_25mL-0_15incrmL.dat")
 
 
 rows = []
@@ -85,14 +86,15 @@ df_files.reset_index(drop=True, inplace=True)
 df_files.drop(columns=['date_sort'], inplace=True)
 
 # Update the existing Excel sheet
-# Make sure we don’t overwrite other columns
-# Assuming row count matches
-for col in ["date", "sample/junk", "bottle", "file name alkalinity","First emf value"]:
-    if col in df.columns:
-        df[col] = df_files[col]
-    else:
-        df[col] = df_files[col]  # add new column if missing
+# Merge old Excel data with new rows
+df_updated = pd.concat([df, df_files], ignore_index=True)
 
+# # Drop duplicates if necessary (e.g., by file name or bottle)
+df_updated.drop_duplicates(subset=["file name alkalinity"], keep="last", inplace=True)
+
+# Save back to Excel
+df_updated.to_excel("logbook_automated_by_python_testing3.xlsx", index=False)
+print(f"✅ Updated {len(df_updated)} rows in {excel_file}")
 # Save back
 print(df)
 df.to_excel(excel_file, index=False)
