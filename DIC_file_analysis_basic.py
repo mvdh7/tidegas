@@ -49,11 +49,11 @@ for file in tfiles:
     int_curr.append(np.array(integrated_current)[-1])
     print(file)
     integrated_current_normalized = integrated_current/np.average(integrated_current[-180:])
-    if max(integrated_current_normalized) <= 10.2:
+    if max(integrated_current_normalized) <= 199990.2:
         plt.plot(integrated_current_normalized[-180:], label = f"{file[-7:-4]}")
         counter +=1
         
-plt.ylim(0.998,1.002)
+#plt.ylim(0.998,1.002)
 plt.ylabel("Normalized integrated current [final 3 minutes]")
 plt.xlabel("time in [s]")
 plt.tight_layout()

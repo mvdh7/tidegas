@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-
+plt.close('all')
 #setup plotting parameters to make everything bigger
 plt.rcParams.update({         # Set standard fontsizes for plot labels
     "axes.labelsize": 16,     # x and y axis labels
@@ -98,7 +98,7 @@ def compare_days(stats, df_long, days):
     plt.show()
 
 #%%
-days_measured = ["1609","1709","1809","3009","0110","0310"]
+days_measured = ["1609","1709","1809","3009","0110","0310","0610"]
 plot_all_individual = True
 
 if plot_all_individual:
