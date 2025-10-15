@@ -20,6 +20,7 @@ def extract_number(fname):
 # List and sort files
 tfiles = sorted(os.listdir(folder_path), key=extract_number)
 
+#%%
 # Build a lookup dict {file_number: integrated_current}
 file_data = {}
 for f in tfiles:

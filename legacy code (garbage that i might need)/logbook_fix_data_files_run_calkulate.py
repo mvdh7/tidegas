@@ -24,27 +24,34 @@ tfiles = os.listdir(file_path)
 # the column acid increments (mL) is used to update the datfile, using the correct spacing in between datapoints
 # TODO Ensure that the last value is also added to the datfile, making a new backup?
 
+
+# TODO add a check for increments, calk.read_dat does NOT work for single step titrations (or aborted runs)
+# solution, build something myself or skip the ones where acid
 acid_increment  = excel_df["acid increments (mL)"]
 for i, row in dbs.iterrows():
     # datfile = os.path.join(row.file_path, row.file_name)
     datfile = row.file_path + '/' + row.file_name
     bakfile = datfile[:-3] + "bak"
-    dat_data = calk.read_dat(datfile)
+    if acid_increment[i] <=1:
+        dat_data = calk.read_dat(datfile)
     
-    
-    calk.write_dat(
-        datfile,
-        # The line below sets the correct titrant_amount values
-        np.arange(0, len(dat_data.titrant_amount) * acid_increment[i], acid_increment[i]),
-        # -----------------------------------------------------
-        dat_data.measurement,
-        dat_data.temperature,
-        mode="w",
-        line0=f"Based on '{bakfile} with acid increment {acid_increment[i]} mL'",
-    )
+   
+        
+        
+        calk.write_dat(
+            datfile,
+            # The line below sets the correct titrant_amount values
+            np.arange(0, len(dat_data.titrant_amount) * acid_increment[i], acid_increment[i]),
+            # -----------------------------------------------------
+            dat_data.measurement,
+            dat_data.temperature,
+            mode="w",
+            line0=f"Based on '{bakfile} with acid increment {acid_increment[i]} mL'",
+        )
 
 
 #%%
+print('passed')
 # Initialize the variables used in calkulate from the excel file, takes the entire column
 dbs["titrant_molinity"]  = excel_df["Titrant Molinity"]  # Extract directly from excel, default = 0.1
 dbs["salinity"] =excel_df["Salinity"]  # Extract directly from excel, default = 30
@@ -52,7 +59,7 @@ dbs["salinity"] =excel_df["Salinity"]  # Extract directly from excel, default = 
 # ???DIC values are different, some measurements might not have corresponding DIC values
 # ??? for the alkalinity measurement the DIC at 0 (if available, else from the same batch?) acid added should be taken?
 # prefereably used the calclated value, think of workflow, calculate reference DIC for each batch? 
-dbs["dic"] = excel_df["Reference DIC (ug/kg)"]
+dbs["dic"] = excel_df["Reference DIC (umol/kg)"]
 dbs["temperature_override"] = excel_df["Temperature"]  # Uses the temperature from the logbook
 
 # Set bad files to ignore

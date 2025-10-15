@@ -60,7 +60,7 @@ valid_dat_files = [f for f in dat_files if f not in exceptions]
 
 # Build rows
 rows = []
-
+emfvalstest = []
 for i, file in enumerate(valid_dat_files):
     match = file_pattern.search(file.lower())
     if match:
@@ -78,17 +78,20 @@ for i, file in enumerate(valid_dat_files):
         # Acid and increment (optional)
         acid_val = None
         incr_val = None
+        emf_val = None
         if match.group(4) and match.group(5):
             acid_val = float(f"{match.group(4)}.{match.group(5)}")
         if match.group(6) and match.group(7):
             incr_val = float(f"{match.group(6)}.{match.group(7)}")
  
         # Read first EMF
-        dat_data = calk.read_dat(os.path.join(file_path, file))
         
-        emf_val = (dat_data.measurement[0] if len(dat_data.measurement) > 0 else np.nan)
-
-
+        if incr_val is not None and incr_val <=2:
+            dat_data = calk.read_dat(os.path.join(file_path, file))
+        
+            emf_val = (dat_data.measurement[0] if len(dat_data.measurement) > 0 else np.nan)
+            emfvalstest.append(emf_val)
+       
         rows.append({
             "date": date_fmt,
             "sample/junk": sample_type,
