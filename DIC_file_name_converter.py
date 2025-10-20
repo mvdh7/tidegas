@@ -54,7 +54,7 @@ def rename_new_files(folder):
                 print(f"Skipped (already exists): {dst}")
 
 rename_new_files(folder_path)
-
+#%%
 # -------------------------------------------------------------------
 # 2. Build ordered file list (first the 100 numeric ones, then dated)
 # -------------------------------------------------------------------

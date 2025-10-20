@@ -38,7 +38,7 @@ for i, row in dbs.iterrows():
         shutil.copyfile(datfile, bakfile)
 # Regex: unified pattern to extract all info
 file_pattern = re.compile(
-    r'(junk|sample)-'         # sample type
+    r'(junk|nose|CRM|sample)-'         # sample type
     r'(\d{6})-'               # date YYMMDD
     r'(\d+)'                  # bottle number
     r'(?:-(\d+)_(\d+)mL)?'   # optional acid volume
@@ -53,7 +53,8 @@ dat_files = [f for f in os.listdir(file_path) if f.lower().endswith('.dat')]
 exceptions = [
     "0-0  0  (0)junk-250930-01.dat",
     "0-0  0  (0)junk-251001-06-2_25mL-0_15incrmL.dat",
-    "0-0  0  (0)junk-251003-06-2_25mL-0_15incrmL.dat"
+    "0-0  0  (0)junk-251003-06-2_25mL-0_15incrmL.dat",
+    "0-0  0  (0)junk-251014-06-4_2mL-0_15incrmL.dat"
 ]
 
 valid_dat_files = [f for f in dat_files if f not in exceptions]
@@ -85,7 +86,7 @@ for i, file in enumerate(valid_dat_files):
             incr_val = float(f"{match.group(6)}.{match.group(7)}")
  
         # Read first EMF
-        
+        print(file)
         if incr_val is not None and incr_val <=2:
             dat_data = calk.read_dat(os.path.join(file_path, file))
         
