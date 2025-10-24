@@ -29,12 +29,17 @@ tfiles = os.listdir(file_path)
 # TODO add a check for increments, calk.read_dat does NOT work for single step titrations (or aborted runs)
 # solution, build something myself or skip the ones where acid
 # Quick fix skips them for now, but ideally new function
+# it also does not work for low acid
+acid_added = excel_df["acid added (mL)"]
 acid_increment  = excel_df["acid increments (mL)"]
 for i, row in dbs.iterrows():
     # datfile = os.path.join(row.file_path, row.file_name)
     datfile = row.file_path + '/' + row.file_name
     bakfile = datfile[:-3] + "bak"
-    if acid_increment[i] <=1: #large acid increments create files that break calk.read_dat 
+    
+    #single step titrations with one acid change create files that break calk.read_dat 
+    if acid_added[i]/acid_increment[i]>1: 
+    
         dat_data = calk.read_dat(datfile)
     
    

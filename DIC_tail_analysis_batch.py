@@ -19,7 +19,7 @@ def extract_number(filename):
 all_files = sorted(all_files, key=extract_number)
 
 # Optionally, select a subset of files (e.g., only files 1-5)
-selected_files = all_files [70:81]  # Change indices as needed
+selected_files = all_files[0:92]  # Change indices as needed
 # selected_files.remove("co2data (60).txt")
 # selected_files.append("co2data (60).txt")
 # -----------------------------
@@ -92,7 +92,7 @@ def plot_batch(df, column_name, title, ylabel, xlabel="Index"):
     plt.title(title)
     plt.ylabel(ylabel)
     plt.xlabel(xlabel)
-    plt.legend()
+    #plt.legend()
     plt.tight_layout()
     plt.show()
 

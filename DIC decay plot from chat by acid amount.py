@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-
+plt.close('all')
 # -------- STYLE --------
 plt.rcParams.update({
     "axes.labelsize": 16,
@@ -31,7 +31,7 @@ ref_dic_col = "Reference DIC (umol/kg)"
 acid_col = "acid increments (mL)"      # incremental acid volume
 acid_total_col = "acid added (mL)"     # total acid added per run
 
-acid_totals_to_plot = [1.2, 4.2]       # <--- list of total acid volumes to process
+acid_totals_to_plot = [0.6,1.2, 4.2]       # <--- list of total acid volumes to process
 selected_dates = None                  # None or list of specific dates to include
 do_regression_lines = True
 

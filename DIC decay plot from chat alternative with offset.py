@@ -38,7 +38,7 @@ ref_dic_col = "Reference DIC (umol/kg)"
 acid_col = "acid increments (mL)"      # incremental acid volume
 acid_total_col = "acid added (mL)"     # total acid added per run
 
-acid_totals_to_plot = [0.6,1.2, 4.2]       # <--- list of total acid volumes to process
+acid_totals_to_plot = [0.6,1.2,2.1, 4.2]       # <--- list of total acid volumes to process
 selected_dates = None                  # None or list of specific dates to include
 do_regression_lines = True
 
@@ -101,7 +101,7 @@ def plot_for_acid_total(df, acid_total):
         plt.plot(x, y, color=color, alpha=0.6)
 
         # Exponential fit
-        if do_regression_lines and len(x) >= 3:
+        if do_regression_lines and len(x) >= 4:
             try:
                 # Initial guesses
                 p0 = [0, 95, 0.001]  # [t0, C, k]
@@ -120,8 +120,8 @@ def plot_for_acid_total(df, acid_total):
         
                 # Nicely formatted text
                 t0, C, k = popt
-                plt.text(xs.mean(), exp_decay(xs.mean(), *popt) + 5,
-                         f"k={k:.4f} 1/min\nC={C:.1f}%", color=color, fontsize=12,
+                plt.text(xs.mean()+35-xs.max()/6, exp_decay(xs.mean(), *popt) + 15,
+                         f"k={k:.4f} 1/min,C={C:.1f}%", color=color, fontsize=12,
                          ha='center', va='bottom', backgroundcolor='white')
         
                 print(f"{label}: t0={t0:.2f}, C={C:.2f}, k={k:.4f}")

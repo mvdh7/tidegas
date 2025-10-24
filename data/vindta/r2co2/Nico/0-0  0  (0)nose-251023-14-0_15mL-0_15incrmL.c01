@@ -1,0 +1,7 @@
+bottle	nose-251023-14-0_15mL-0_15incrmL	0	0	0	0	0.00	0.00	35.000	4.000	0.00	0.0	10/23/25	13:16	3C standard AT only	filename: 	0-0  0  (0)nose-251023-14-0_15mL-0_15incrmL.dat	Date: 	23-Oct-25	Time :	1:22 PMCalc. ID: 	01	constants used: 	Prieto and Millero	ml 	mV 	fitted vol.	pH (calc.)	temp.	
+0.000	175.850	0.000	0.000	0.000
+temperature 	salinity	phosphate	silicate	temp. used	density0.000000	35.000000	0.000000	0.000000	25.000000	1.023343
+sample (g) 	acid dens.	acid conc.102.334282	1.022700	0.100000
+simple granplot results: AT	CT	E0	K1NaN	NaN	0.000	NaN
+modified granplot results: AT	CT	E0	K1	RMSNaN	NaN	NaN	NaN	0.000
+curve fitting results: AT	CT	E0	K1	mseNaN

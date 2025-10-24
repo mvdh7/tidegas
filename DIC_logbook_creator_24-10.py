@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Oct 10 11:14:19 2025
+Created on Fri Oct 24 11:30:35 2025
 
 @author: nicor
 """
@@ -9,7 +9,7 @@ import os
 import pandas as pd
 import re
 from datetime import datetime
-import numpy as np 
+import numpy as np
 
 FARADAY = 96485.3321  # C/mol
 
@@ -32,18 +32,14 @@ for fname in txt_files:
     fpath = os.path.join(folder_path, fname)
     m = timestamp_pattern.match(fname)
     if m:
-        # New-style filename with embedded timestamp
         try:
             dt = datetime.strptime(m.group(1), "%Y-%m-%dT%H%M%S.%f")
         except ValueError:
             dt = datetime.fromtimestamp(os.path.getmtime(fpath))
     else:
-        # Legacy filename → use file's modification time
         dt = datetime.fromtimestamp(os.path.getmtime(fpath))
-
     files_info.append((fname, dt))
 
-# Sort chronologically
 files_info.sort(key=lambda x: x[1])
 
 # -------------------------------------------------------------------
@@ -58,9 +54,9 @@ for i, (fname, dt) in enumerate(files_info, start=1):
     daily_counts.setdefault(date_str, 0)
     daily_counts[date_str] += 1
     date_idx = daily_counts[date_str]
-    timestamp =dt.strftime("%H:%M:%S")
+    timestamp = dt.strftime("%H:%M:%S")
     records.append({
-        "DIC file number": i-1,
+        "DIC file number": i - 1,
         "DIC file name": fname,
         "File date": date_str,
         "Date index": date_idx,
@@ -74,19 +70,9 @@ print(f"🧾 Found {len(files_df)} files across {len(daily_counts)} dates.")
 # 4. Extract integrated current from files
 # -------------------------------------------------------------------
 
-# TODO unify this step, avoid loading files several times. extract everything at once, calculate differences etc at once. limit the use of lists.
 def extract_data_from_DIC_file(file_path):
-    """ 
-    Compute and returns relevant data
-    WIP
-    Final raw integrated count
-    Final count compensated for negative slope
-    The difference of accounting for the negative slope in counts
-    The integration duration in seconds
-    """
-    #start with reading the file
+    """Compute and return raw and corrected integrated current values."""
     try:
-        
         file = pd.read_csv(file_path)
         # Find 'Cell[uAs]' column flexibly
         uAs_col = None
@@ -95,43 +81,41 @@ def extract_data_from_DIC_file(file_path):
             if "cell" in c and "uas" in c:
                 uAs_col = col
                 break
+
         if uAs_col and not file[uAs_col].dropna().empty:
-            raw_current= file[uAs_col].dropna().iloc[-1]
-        
-       
-       #compensating for the negative slope 
-       # Spike correction (mask peaks >= 1e7)
-        file[" Cell[uAs]"] = file[" Cell[uAs]"].mask(
-            file[" Cell[uAs]"] >= 1e7,
-            (file[" Cell[uAs]"].shift(1) + file[" Cell[uAs]"].shift(-1)) / 2
+            raw_current = file[uAs_col].dropna().iloc[-1]
+        else:
+            raw_current = np.nan
+
+        # Spike correction
+        file[uAs_col] = file[uAs_col].mask(
+            file[uAs_col] >= 1e7,
+            (file[uAs_col].shift(1) + file[uAs_col].shift(-1)) / 2
         )
-        
+
         # Remove negative slopes
-        corrected = [0]
         integrated_current_negative_removed = 0
         for i in range(len(file) - 1):
-            if file[" Cell[uAs]"].iloc[i+1] <= file[" Cell[uAs]"].iloc[i]:
-                integrated_current_negative_removed = integrated_current_negative_removed
-            else:
-                integrated_current_negative_removed += file[" Cell[uAs]"].iloc[i+1] - file[" Cell[uAs]"].iloc[i]
-            
-        
-        #calculate difference
-        difference = integrated_current_negative_removed-raw_current
-            
-        #calculate time duration (sample rate  = 1Hz)
-        integration_time = len(file[" Cell[uAs]"])
+            if file[uAs_col].iloc[i + 1] > file[uAs_col].iloc[i]:
+                integrated_current_negative_removed += file[uAs_col].iloc[i + 1] - file[uAs_col].iloc[i]
+
+        difference = integrated_current_negative_removed - raw_current
+        integration_time = len(file[uAs_col])
+
+        return raw_current, round(integrated_current_negative_removed, 2), round(difference, 2), int(integration_time)
+
     except Exception as e:
         print(f"⚠️ Error reading {file_path}: {e}")
-    return raw_current,round(integrated_current_negative_removed,2), round(difference,2),int(integration_time)
-        
+        return np.nan, np.nan, np.nan, np.nan
 
-files_df[["Integrated current raw [uAs]","Negative slope corrected current [uAs]","Difference negative removal", "Integration time"]] = [
+
+files_df[["Integrated current raw [uAs]",
+          "Negative slope corrected current [uAs]",
+          "Difference negative removal",
+          "Integration time"]] = [
     extract_data_from_DIC_file(os.path.join(folder_path, f))
     for f in files_df["DIC file name"]
 ]
-
-#%%
 
 # -------------------------------------------------------------------
 # 5. Load or create live logbook
@@ -153,13 +137,16 @@ for col in [
     "Difference negative removal",
     "Integration time",
     "Raw DIC (umol/L)",
-    "timestamp (UTC)"
+    "timestamp (UTC)",
+    "Corresponding Vindta",
+    "Reference",
+    "Volume (mL)"
 ]:
     if col not in main_table.columns:
         main_table[col] = None
 
 # -------------------------------------------------------------------
-# 5b. Merge/update columns without creating extra columns
+# 5b. Merge/update columns safely
 # -------------------------------------------------------------------
 
 update_cols = [
@@ -173,66 +160,73 @@ update_cols = [
     "timestamp (UTC)"
 ]
 
+# Remove duplicates by DIC file number
+files_df = files_df[~files_df["DIC file number"].duplicated(keep="last")]
+main_table = main_table[~main_table["DIC file number"].duplicated(keep="last")]
+
 if main_table.empty:
-    # First run: just copy all
     main_table = files_df.copy()
 else:
-    # Update existing rows or append new ones
     main_table.set_index("DIC file number", inplace=True)
     files_df.set_index("DIC file number", inplace=True)
-    
+
+    # Only update missing or new values, don't overwrite manual edits
     for col in update_cols:
-        main_table[col] = files_df[col].combine_first(main_table[col])
-    
-    # Add any completely new rows not in main_table
+        if col in files_df.columns and col in main_table.columns:
+            main_table.loc[:, col] = main_table[col].combine_first(files_df[col])
+
+    # Add any new rows
     new_rows = files_df.index.difference(main_table.index)
     if len(new_rows) > 0:
+        print(f"🆕 Adding {len(new_rows)} new rows to the logbook.")
         main_table = pd.concat([main_table, files_df.loc[new_rows]], axis=0)
-    
+
     main_table.reset_index(inplace=True)
     files_df.reset_index(inplace=True)
 
 # -------------------------------------------------------------------
-# 6. Compute Raw DIC
+# 6. Ensure default Volume
 # -------------------------------------------------------------------
 
-#the return is a bit sketchy, but first limit the decimals to remove numerical noise and then make them floats again
-#TODO make this less terrible, keeping them as strings creates problems for the reference 
+if "Volume (mL)" not in main_table.columns:
+    main_table["Volume (mL)"] = 25.0
+else:
+    main_table["Volume (mL)"] = main_table["Volume (mL)"].fillna(25.0)
+
+# -------------------------------------------------------------------
+# 7. Compute Raw and Corrected DIC
+# -------------------------------------------------------------------
 
 def calc_dic_raw(row):
     if pd.notna(row["Integrated current raw [uAs]"]) and pd.notna(row.get("Volume (mL)")):
         return float("{:.4f}".format(row["Integrated current raw [uAs]"] / ((row["Volume (mL)"]/1000) * FARADAY)))
     else:
-        return None
+        return np.nan
+
 def calc_dic_negative_removed(row):
     if pd.notna(row["Negative slope corrected current [uAs]"]) and pd.notna(row.get("Volume (mL)")):
         return float("{:.4f}".format(row["Negative slope corrected current [uAs]"] / ((row["Volume (mL)"]/1000) * FARADAY)))
     else:
-        return None
-    
-main_table["Raw DIC (umol/L)"] = main_table.apply(calc_dic_raw, axis=1)
+        return np.nan
 
+main_table["Raw DIC (umol/L)"] = main_table.apply(calc_dic_raw, axis=1)
 main_table["Negative removed DIC (umol/L)"] = main_table.apply(calc_dic_negative_removed, axis=1)
 
-
 # -------------------------------------------------------------------
-# 6b. Compute daily reference averages from 0 acid added straight from the tank measurements
+# 8. Compute daily reference averages
 # -------------------------------------------------------------------
 
-# Initialize the column if it doesn't exist
 if "Daily reference DIC (umol/L)" not in main_table.columns:
     main_table["Daily reference DIC (umol/L)"] = np.nan
 
-# Compute daily averages for reference samples
 daily_ref = round(main_table.loc[main_table["Reference"] == 1].groupby("File date")[
     "Negative removed DIC (umol/L)"
-].mean(),5)
+].mean(), 5)
 
-# Assign the daily reference to all rows for that date
 main_table["Daily reference DIC (umol/L)"] = main_table["File date"].map(daily_ref)
 
 # -------------------------------------------------------------------
-# 7. Save (overwrite live)
+# 9. Save
 # -------------------------------------------------------------------
 
 main_table.sort_values("DIC file number", inplace=True)

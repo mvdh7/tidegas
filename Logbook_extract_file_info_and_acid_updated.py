@@ -25,7 +25,7 @@ else:
 
 # Import dbs file
 dbs = calk.read_dbs("data/vindta/r2co2/Nico.dbs", file_path=file_path)
-
+#%%
 # create backups if not already done
 tfiles = os.listdir(file_path)
 
@@ -54,7 +54,8 @@ exceptions = [
     "0-0  0  (0)junk-250930-01.dat",
     "0-0  0  (0)junk-251001-06-2_25mL-0_15incrmL.dat",
     "0-0  0  (0)junk-251003-06-2_25mL-0_15incrmL.dat",
-    "0-0  0  (0)junk-251014-06-4_2mL-0_15incrmL.dat"
+    "0-0  0  (0)junk-251014-06-4_2mL-0_15incrmL.dat",
+    
 ]
 
 valid_dat_files = [f for f in dat_files if f not in exceptions]
@@ -87,7 +88,11 @@ for i, file in enumerate(valid_dat_files):
  
         # Read first EMF
         print(file)
-        if incr_val is not None and incr_val <=2:
+        #have to setup if statement here to ensure it doesnt read files with only 1 line,
+        #in those cases the titrant amount gives titrant_amount = data[:, col_titrant_amount]:
+        # IndexError: too many indices for array: array is 1-dimensional, but 2 were indexed
+        
+        if incr_val is not None and incr_val <=2 and acid_val>0.15:
             dat_data = calk.read_dat(os.path.join(file_path, file))
         
             emf_val = (dat_data.measurement[0] if len(dat_data.measurement) > 0 else np.nan)
