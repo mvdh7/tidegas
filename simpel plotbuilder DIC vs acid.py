@@ -22,17 +22,18 @@ if not all(col in df.columns for col in ["Calculated DIC (umol/kg)", "acid added
 plot_df = df.dropna(subset=["Calculated DIC (umol/kg)", "acid added (mL)", "date", "waiting time (minutes)"]).copy()
 
 #select only the files without any (significant) waiting time 
-plot_df =plot_df[plot_df["waiting time (minutes)"]<=0.5]
+plot_df =plot_df[plot_df["waiting time (minutes)"]<=0.05]
 
 #possible to select a specific date, or exclude a date
-plot_df = plot_df[plot_df["date"]=="23-Oct"]
-#plot_df = plot_df[plot_df["date"]!="9-Oct"]
+#plot_df = plot_df[plot_df["date"]=="23-Oct"]
+plot_df = plot_df[plot_df["date"]!="09/10/2025"]
+#plot_df = plot_df[plot_df["batch"]==1]
 
 plot_df["acid added (mL)"] = pd.to_numeric(plot_df["acid added (mL)"], errors='coerce')
 plot_df["Calculated DIC (umol/kg)"] = pd.to_numeric(plot_df["Calculated DIC (umol/kg)"], errors='coerce')
 plot_df["Percentage DIC"] = pd.to_numeric(100*plot_df["Calculated DIC (umol/kg)"]/plot_df["Reference DIC (umol/kg)"], errors='coerce')
 plot_df["waiting time (minutes)"] = pd.to_numeric(plot_df["waiting time (minutes)"], errors='coerce')
-
+plot_df["Titration duration (seconds)"] = pd.to_numeric(plot_df["Titration duration (seconds)"], errors='coerce')
 
 # Scatter plot with hue by date
 plt.figure()
@@ -41,12 +42,71 @@ sns.scatterplot(
     x="acid added (mL)",
     y="Percentage DIC",
     hue="date",
-    palette="tab10",
+    palette="tab20",
     s=70
 )
 plt.grid()
 plt.xlabel("Acid added (mL)")
 plt.ylabel("Remaining DIC (%)")
+plt.title("DIC vs Acid Added for Different Days")
+plt.legend(title="Date", bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
+
+
+
+# Scatter plot with hue by date
+plt.figure()
+sns.scatterplot(
+    data=plot_df,
+    x="acid added (mL)",
+    y="Calculated DIC (umol/kg)",
+    hue="date",
+    palette="tab20",
+    s=70
+)
+plt.grid()
+plt.xlabel("Acid added (mL)")
+plt.ylabel("Remaining DIC (umol/kg)")
+plt.title("DIC vs Acid Added for Different Days")
+plt.legend(title="Date", bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
+
+
+#%%
+# Scatter plot with hue by date
+plt.figure()
+sns.scatterplot(
+    data=plot_df,
+    x="Titration duration (seconds)",
+    y="Calculated DIC (umol/kg)",
+    hue="date",
+    palette="tab20",
+    s=70
+)
+plt.grid()
+plt.xlabel("Titration duration (seconds)")
+plt.ylabel("Remaining DIC ")
+plt.title("DIC vs Acid Added for Different Days")
+plt.legend(title="Date", bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
+
+
+# Scatter plot with hue by date
+plt.figure()
+sns.scatterplot(
+    data=plot_df,
+    x="Titration duration (seconds)",
+    y="Percentage DIC",
+    hue="date",
+    palette="tab20",
+    s=70
+)
+plt.grid()
+plt.xlabel("Titration duration (seconds)")
+plt.ylabel("Remaining DIC (%) ")
 plt.title("DIC vs Acid Added for Different Days")
 plt.legend(title="Date", bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()

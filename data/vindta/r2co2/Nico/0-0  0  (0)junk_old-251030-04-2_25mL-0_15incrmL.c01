@@ -1,0 +1,21 @@
+bottle	junk_old-251030-04-2_25mL-0_15incrmL	0	0	0	0	0.00	0.00	35.000	4.000	0.00	0.0	10/30/25	10:46	3C standard AT only	filename: 	0-0  0  (0)junk_old-251030-04-2_25mL-0_15incrmL.dat	Date: 	30-Oct-25	Time :	10:57 AMCalc. ID: 	01	constants used: 	Prieto and Millero	ml 	mV 	fitted vol.	pH (calc.)	temp.	
+0.000	169.050	0.000	0.000	0.000
+0.000	195.450	0.000	0.000	0.000
+0.000	219.000	0.000	0.000	0.000
+0.000	234.450	0.000	0.000	0.000
+0.000	245.600	0.000	0.000	0.000
+0.000	254.750	0.000	0.000	0.000
+0.000	262.550	0.000	0.000	0.000
+0.000	269.750	0.000	0.000	0.000
+0.000	276.700	0.000	0.000	0.000
+0.000	283.600	0.000	0.000	0.000
+0.000	290.600	0.000	0.000	0.000
+0.000	298.200	0.000	0.000	0.000
+0.000	306.900	0.000	0.000	0.000
+0.000	317.200	0.000	0.000	0.000
+0.000	331.000	0.000	0.000	0.000
+temperature 	salinity	phosphate	silicate	temp. used	density0.000000	35.000000	0.000000	0.000000	25.000000	1.023343
+sample (g) 	acid dens.	acid conc.102.334282	1.022700	0.100000
+simple granplot results: AT	CT	E0	K1Inf	NaN	0.000	NaN
+modified granplot results: AT	CT	E0	K1	RMSNaN	NaN	NaN	NaN	NaN
+curve fitting results: AT	CT	E0	K1	mseNaN
