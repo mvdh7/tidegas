@@ -38,7 +38,7 @@ ref_dic_col = "Reference DIC (umol/kg)"
 acid_col = "acid increments (mL)"      # incremental acid volume
 acid_total_col = "acid added (mL)"     # total acid added per run
 
-acid_totals_to_plot = [0.6,1.2,2.1, 4.2]       # <--- list of total acid volumes to process
+acid_totals_to_plot = [0.6,1.2,1.65,2.1,3, 4.2]       # <--- list of total acid volumes to process
 selected_dates = None                  # None or list of specific dates to include
 do_regression_lines = True
 
@@ -75,7 +75,7 @@ def plot_for_acid_total(df, acid_total):
 
     # Keep only groups with ≥3 points
     group_counts = df_sub.groupby([date_col, acid_col]).size()
-    valid_groups = group_counts[group_counts >= 3].index
+    valid_groups = group_counts[group_counts >= 1].index
     df_sub = df_sub.set_index([date_col, acid_col]).loc[valid_groups].reset_index()
 
     if df_sub.empty:
@@ -101,7 +101,7 @@ def plot_for_acid_total(df, acid_total):
         plt.plot(x, y, color=color, alpha=0.6)
 
         # Exponential fit
-        if do_regression_lines and len(x) >= 4:
+        if do_regression_lines and len(x) >= 5:
             try:
                 # Initial guesses
                 p0 = [0, 95, 0.001]  # [t0, C, k]

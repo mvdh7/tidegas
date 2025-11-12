@@ -18,17 +18,21 @@ dbs = calk.read_dbs("data/vindta/r2co2/Nico.dbs", file_path=file_path)
 
 # dbs["cert. CRM CT"] = np.ones(221)*2029.34
 # dbs["cert. CRM AT"] = np.ones(221)*2183.64
-alkalinity_certified = np.empty(221)
-alkalinity_certified[98] = 2183.64 
+alkalinity_certified = np.empty(274)
+alkalinity_certified[[98,267] ] = [2183.64, 2183.64]
+
 dbs["salinity"] = 32.710
 dbs["dic"] = 2029.34 
 dbs["alkalinity_certified"] = alkalinity_certified
 dbs.calibrate(98)
+titrant_molinity_acid_batch_1 = dbs["titrant_molinity_here"][98]
 print(f'titrant molinity = {dbs["titrant_molinity_here"][98]}')
 # ds["alkalinity_certified"]=2183.64
 # ds["dic"] = 2029.34
 # ds["salinity"] = 32.710
-titrant_molinity = dbs["titrant_molinity_here"][98]
+dbs.calibrate(267)
+titrant_molinity_acid_batch_2 = dbs["titrant_molinity_here"][267]
+print(f'titrant molinity = {dbs["titrant_molinity_here"][267]}')
 #%%
 # # Now we can proceed with Calkulate as normal
 # dbs["titrant_molinity"] = 0.1  # guess for now, calibrate later

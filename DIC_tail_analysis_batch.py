@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 import re
-
+from datetime import datetime 
 # -----------------------------
 # Folder path and file selection
 # -----------------------------
@@ -12,14 +12,32 @@ folder_path = "data/vindta/r2co2/Bobometer"
 all_files = [f for f in os.listdir(folder_path) if f.endswith(".txt")]
 
 # Sort files by the number inside parentheses, e.g., "co2data (3).txt"
-def extract_number(filename):
-    match = re.search(r"\((\d+)\)", filename)
-    return int(match.group(1)) if match else -1
+def extract_date_and_number(filename):
+    """
+    Returns a tuple (date, number) for sorting.
+    Date is a datetime object if present, else minimal date.
+    Number is the integer inside parentheses.
+    """
+    # Extract date pattern: DD-MM
+    date_match = re.search(r"(\d{1,2}-\d{1,2})", filename)
+    if date_match:
+        date_str = date_match.group(1)
+        # Convert to datetime (year arbitrary, e.g., 2000)
+        date_obj = datetime.strptime(date_str + "-2000", "%d-%m-%Y")
+    else:
+        # If no date, set minimal date so it comes first
+        date_obj = datetime(2000, 1, 1)
 
-all_files = sorted(all_files, key=extract_number)
+    # Extract number in parentheses
+    number_match = re.search(r"\((\d+)\)\.txt$", filename)
+    number = int(number_match.group(1)) if number_match else -1
 
+    return (date_obj, number)
+
+# Sort files by (date, number)
+all_files = sorted(all_files, key=extract_date_and_number)
 # Optionally, select a subset of files (e.g., only files 1-5)
-selected_files = all_files[0:92]  # Change indices as needed
+selected_files = all_files[-20:-10]  # Change indices as needed
 # selected_files.remove("co2data (60).txt")
 # selected_files.append("co2data (60).txt")
 # -----------------------------
@@ -88,11 +106,11 @@ import matplotlib.pyplot as plt
 def plot_batch(df, column_name, title, ylabel, xlabel="Index"):
     plt.figure(figsize=(10,6))
     for idx, row in df.iterrows():
-        plt.plot(row[column_name], label=row["file_name"],linewidth =2 )
+        plt.plot(row[column_name], label=row["file_name"],linewidth =1 )
     plt.title(title)
     plt.ylabel(ylabel)
     plt.xlabel(xlabel)
-    #plt.legend()
+   # plt.legend()
     plt.tight_layout()
     plt.show()
 

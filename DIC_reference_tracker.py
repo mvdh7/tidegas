@@ -74,5 +74,7 @@ def plot_reference_universal(selected_dates=None):
 # -------------------------------------------------------------------
 # 5. Example usage
 # -------------------------------------------------------------------
-selected_dates = ["2025-10-09", "2025-10-10"]  # or None for all
+selected_dates = ["30/10/2025", "27/10/2025"]  # or None for all
+plot_reference_universal(selected_dates)
+
 plot_reference_universal(all_dates)

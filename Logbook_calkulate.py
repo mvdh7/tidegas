@@ -78,6 +78,15 @@ dic_lookup.rename(
     },
     inplace=True,
 )
+
+#use file nr column to get calculated DIC and store corresponding file name of DIC measurement with each titration 
+excel_df["Calculated DIC (umol/L)"] = excel_df["Corresponding DIC file nr"].map(
+    dic_lookup.set_index("Corresponding DIC file nr")["Calculated DIC (umol/L)"]
+)
+excel_df["file name DIC"] = excel_df["Corresponding DIC file nr"].map(
+    dic_lookup.set_index("Corresponding DIC file nr")["DIC file name"]
+)
+
 # # Make sure dates are comparable
 excel_df["Date"] = pd.to_datetime(excel_df["date"], format="%d/%m/%Y").dt.date
 dic_lookup["Date"] = pd.to_datetime(dic_lookup["File date"], format="%d/%m/%Y").dt.date

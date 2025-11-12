@@ -14,7 +14,7 @@ import shutil
 import numpy as np
 
 # Paths
-excel_file = "logbook_automated_by_python_testing5.xlsx"
+excel_file = "logbook_automated_by_python_testing.xlsx"
 file_path = "data/vindta/r2co2/Nico"
 
 # Read existing Excel logbook
@@ -38,7 +38,7 @@ for i, row in dbs.iterrows():
         shutil.copyfile(datfile, bakfile)
 # Regex: unified pattern to extract all info
 file_pattern = re.compile(
-    r'(junk|nose|CRM|sample|junk_old|nuts)-'         # sample type
+    r'(junk|nose|CRM|sample|junk_old|nuts|junk_old_2)-'         # sample type
     r'(\d{6})-'               # date YYMMDD
     r'(\d+)'                  # bottle number
     r'(?:-(\d+)_(\d+)mL)?'   # optional acid volume
@@ -92,7 +92,7 @@ for i, file in enumerate(valid_dat_files):
         #in those cases the titrant amount gives titrant_amount = data[:, col_titrant_amount]:
         # IndexError: too many indices for array: array is 1-dimensional, but 2 were indexed
         
-        if incr_val is not None and incr_val <=2 and acid_val>0.15:
+        if incr_val is not None and acid_val/incr_val > 2:
             dat_data = calk.read_dat(os.path.join(file_path, file))
         
             emf_val = (dat_data.measurement[0] if len(dat_data.measurement) > 0 else np.nan)

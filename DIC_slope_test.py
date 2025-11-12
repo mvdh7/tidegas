@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 import re
-
+from datetime import datetime
 import matplotlib.pyplot as plt
 
 folder_path = "data/vindta/r2co2/Bobometer"
@@ -11,15 +11,36 @@ folder_path = "data/vindta/r2co2/Bobometer"
 # Get all txt files
 all_files = [f for f in os.listdir(folder_path) if f.endswith(".txt")]
 
-# Sort files by the number inside parentheses, e.g., "co2data (3).txt"
-def extract_number(filename):
-    match = re.search(r"\((\d+)\)", filename)
-    return int(match.group(1)) if match else -1
+def extract_date_and_number(filename):
+    """
+    Returns a tuple (date, number) for sorting.
+    Date is a datetime object if present, else minimal date.
+    Number is the integer inside parentheses.
+    """
+    # Extract date pattern: DD-MM
+    date_match = re.search(r"(\d{1,2}-\d{1,2})", filename)
+    if date_match:
+        date_str = date_match.group(1)
+        # Convert to datetime (year arbitrary, e.g., 2000)
+        date_obj = datetime.strptime(date_str + "-2000", "%d-%m-%Y")
+    else:
+        # If no date, set minimal date so it comes first
+        date_obj = datetime(2000, 1, 1)
 
-all_files = sorted(all_files, key=extract_number)
+    # Extract number in parentheses
+    number_match = re.search(r"\((\d+)\)\.txt$", filename)
+    number = int(number_match.group(1)) if number_match else -1
+
+    return (date_obj, number)
+
+# Sort files by (date, number)
+all_files = sorted(all_files, key=extract_date_and_number)
+
+print(all_files)
+
 
 # Optionally, select a subset of files (e.g., only files 1-5)
-selected_files = all_files# [0:20]  # Change indices as needed
+selected_files = all_files[-6:]# [0:20]  # Change indices as needed
 # selected_files.remove("co2data (60).txt")
 # selected_files.append("co2data (60).txt")
 # -----------------------------
@@ -148,24 +169,14 @@ def plot_fits(df, n_files=5):
     plt.show()
 
 # Example usage:
-plot_fits(df_results, n_files=5)
+# %%
+plot_fits(df_results, n_files=300)
 
 
-# Helper to extract file number from name
-def extract_number(filename):
-    match = re.search(r"\((\d+)\)", filename)
-    return int(match.group(1)) if match else np.nan
-
-# Add a "file_number" column if not present
-if "file_number" not in df_results.columns:
-    df_results["file_number"] = df_results["file_name"].apply(extract_number)
-
-# Sort by file number (optional, for cleaner x-axis)
-df_results = df_results.sort_values("file_number")
 
 # --- PLOT ---
 plt.figure(figsize=(10,6))
-plt.plot(df_results["file_number"], df_results["fit_slope"], "o-", linewidth=2)
+plt.plot(df_results["fit_slope"], "o-", linewidth=2)
 plt.title("Linear Fit Slope (Last 180 s) Across Files")
 plt.xlabel("File Number")
 plt.ylabel("Slope of Last 180 s [µA·s per s]")
