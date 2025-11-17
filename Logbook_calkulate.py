@@ -100,6 +100,10 @@ excel_keys = list(zip(excel_df["Date"], excel_df["sample/junk"]))
 
 #add a default DIC of 2300 in case there is no Reference
 excel_df["Reference DIC (umol/L)"] = [ref_dic_map.get(k, 2300) for k in excel_keys]
+
+#TODO this also uses the DIC measured of the CRM as a reference, where we actually know the DIC
+# perhaps it's better to have both the DIC from the Dickson analysis and the bobometer side by side
+# now the alkalinity calculated is 'wrong' because the DIC is wrong
 excel_df = excel_df.drop("Date",axis =1)
 
 

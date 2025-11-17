@@ -38,7 +38,7 @@ for i, row in dbs.iterrows():
         shutil.copyfile(datfile, bakfile)
 # Regex: unified pattern to extract all info
 file_pattern = re.compile(
-    r'(junk|nose|CRM|sample|junk_old|nuts|junk_old_2)-'         # sample type
+    r'(|junk|nose|CRM|sample|junk_old|nuts|junk_old_2|junk_old_3)-'         # sample type
     r'(\d{6})-'               # date YYMMDD
     r'(\d+)'                  # bottle number
     r'(?:-(\d+)_(\d+)mL)?'   # optional acid volume
@@ -69,7 +69,7 @@ for i, file in enumerate(valid_dat_files):
         sample_type = match.group(1).capitalize()
         date_str = match.group(2)
         bottle = int(match.group(3))
-
+        
         # Convert date to DD-MMM
         try:
             date_obj = datetime.strptime(date_str, "%y%m%d")
@@ -80,12 +80,15 @@ for i, file in enumerate(valid_dat_files):
         # Acid and increment (optional)
         acid_val = None
         incr_val = None
+        mixing_time = None
         emf_val = None
         if match.group(4) and match.group(5):
             acid_val = float(f"{match.group(4)}.{match.group(5)}")
         if match.group(6) and match.group(7):
             incr_val = float(f"{match.group(6)}.{match.group(7)}")
- 
+
+
+            
         # Read first EMF
         print(file)
         #have to setup if statement here to ensure it doesnt read files with only 1 line,
@@ -105,7 +108,7 @@ for i, file in enumerate(valid_dat_files):
             "file name alkalinity": file,
             "First emf value": emf_val,
             "acid added (mL)": acid_val,
-            "acid increments (mL)": incr_val
+            "acid increments (mL)": incr_val,
         })
 
 # Build new DataFrame
@@ -120,7 +123,7 @@ df_files.drop(columns=['date_sort'], inplace=True)
 # Columns we care about
 cols_to_fill = [
     "date", "sample/junk", "bottle", "file name alkalinity",
-    "First emf value", "acid added (mL)", "acid increments (mL)"
+    "First emf value", "acid added (mL)", "acid increments (mL)","Mixing and waiting time (seconds)"
 ]
 
 # Append only new files below existing Excel rows, preserving other columns

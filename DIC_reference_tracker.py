@@ -39,6 +39,9 @@ def time_to_hours(time_str):
 df_ref = df[df["Reference"] == 1].copy()
 df_ref["Hour"] = df_ref["timestamp (UTC)"].apply(time_to_hours)
 
+
+df_ref = df_ref[df_ref["File date"]!="09/10/2025"]
+df_ref =  df_ref[df_ref["Sample type"]!="Crm"]
 # -------------------------------------------------------------------
 # 4. Plot function
 # -------------------------------------------------------------------
@@ -60,7 +63,8 @@ def plot_reference_universal(selected_dates=None):
     
     for date in sorted(data["File date"].unique()):
         day_data = data[data["File date"] == date]
-        plt.plot(day_data["Hour"], day_data["Negative removed DIC (umol/L)"],marker='o',label=date)
+        if len(day_data) >= 4:
+            plt.plot(day_data["Hour"], day_data["Negative removed DIC (umol/L)"],marker='o',label=date)
     
     plt.xlabel("Time (hours)")
     plt.ylabel("Negative removed DIC (umol/L)")
@@ -74,7 +78,8 @@ def plot_reference_universal(selected_dates=None):
 # -------------------------------------------------------------------
 # 5. Example usage
 # -------------------------------------------------------------------
-selected_dates = ["30/10/2025", "27/10/2025"]  # or None for all
+selected_dates = ["03/11/2025", "05/11/2025", "11/11/2025","12/11/2025"]  # or None for all
+
 plot_reference_universal(selected_dates)
 
 plot_reference_universal(all_dates)

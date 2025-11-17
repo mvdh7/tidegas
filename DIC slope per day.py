@@ -61,6 +61,9 @@ for file_name in selected_files:
         (file[" Cell[uAs]"].shift(1) + file[" Cell[uAs]"].shift(-1)) / 2
     )
 
+    file[" Cell[uAs]"] = file[" Cell[uAs]"].mask(file[" Cell[uAs]"].shift(1)-file[" Cell[uAs]"].shift(0)>=3000000, (file[" Cell[uAs]"].shift(1) + file[" Cell[uAs]"].shift(-1)) / 2
+    )
+
     # Total integrated current
     total_cell_integrated = file[" Cell[uAs]"].tolist()
 

@@ -27,13 +27,13 @@ plot_df = df.dropna(subset=["Calculated DIC (umol/kg)", "acid added (mL)", "date
 plot_df =plot_df[plot_df["waiting time (minutes)"]<=0.05]
 plot_df =plot_df[plot_df["acid increments (mL)"]<=0.15]
 plot_df = plot_df[plot_df["date"]!="09/10/2025"]
-
+plot_df = plot_df[plot_df["Mixing and waiting time (seconds)"]==4]
 
 
 plot_df["Date"] = pd.to_datetime(plot_df["date"], format="%d/%m/%Y")
 
 # # Filter from a certain date onwards
-start_date = "10-11-2025"  # YYYY-MM-DD
+start_date = "10-10-2025"  # YYYY-MM-DD
 plot_df = plot_df[plot_df["Date"] >= start_date]
 
 #possible to select a specific date, or exclude a date

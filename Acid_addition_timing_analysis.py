@@ -13,7 +13,7 @@ plt.rcParams.update({         # Set standard fontsizes for plot labels
 
 
 #import csv file from local path
-path = "data/vindta/r2co2/Nico/acid_timings_titration.csv"
+path = "data/vindta/r2co2/acid_timings_titration.csv"
 
 #read into dataframe
 df = pd.read_csv(path)
@@ -98,7 +98,7 @@ def compare_days(stats, df_long, days):
     plt.show()
 
 #%%
-days_measured = ["1609","1709","1809","3009","0110","0310","0610","1710"]
+days_measured = ["1609","1709","1809","3009","0110","0310","0610","1710","2910","3010", "0511", "1011"]
 plot_all_individual = True
 
 if plot_all_individual:
