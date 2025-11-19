@@ -142,7 +142,7 @@ def plot_reference_universal(selected_dates=None):
     
     plt.xlabel("Time (hours, UTC)")
     plt.ylabel("DIC w.r.t reference (%)")
-    plt.title("Reference measurements (color = day in chronological order, marker = sample type)")
+    plt.title("Reference measurements")
     plt.xticks(range(8, 16))  # universal 8:00–15:00
     plt.grid(True, alpha=0.3)
     plt.legend(title="Date — Sample type", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize="small")

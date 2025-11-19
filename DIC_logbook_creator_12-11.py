@@ -178,7 +178,19 @@ else:
 
 # -------------------------------------------------------------------
 # 6. Ensure default Volume
-# -------------------------------------------------------------------
+# -------------------------------------------------------------------# Compute daily reference per File date and Sample type
+daily_ref = (
+    main_table.loc[main_table["Reference"] == 1]
+    .groupby(["File date", "Sample type"])["Negative removed DIC (umol/L)"]
+    .mean()
+    .round(5)
+)
+
+# Map values back to main_table based on both File date and Sample type
+main_table["Daily reference DIC (umol/L)"] = main_table.set_index(
+    ["File date", "Sample type"]
+).index.map(daily_ref)
+
 
 main_table["Volume (mL)"] = main_table["Volume (mL)"].fillna(25.0)
 
@@ -195,18 +207,6 @@ main_table["Negative removed DIC (umol/L)"] = (main_table["Negative slope correc
 #seperate them by sample type, Junk etc. different from actual sample 
 # -------------------------------------------------------------------
 
-# Compute daily reference per File date and Sample type
-daily_ref = (
-    main_table.loc[main_table["Reference"] == 1]
-    .groupby(["File date", "Sample type"])["Negative removed DIC (umol/L)"]
-    .mean()
-    .round(5)
-)
-
-# Map values back to main_table based on both File date and Sample type
-main_table["Daily reference DIC (umol/L)"] = main_table.set_index(
-    ["File date", "Sample type"]
-).index.map(daily_ref)
 
 # -------------------------------------------------------------------
 # 9. Save

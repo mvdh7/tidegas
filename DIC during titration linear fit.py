@@ -2,6 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
 
 #setup plotting parameters to make everything bigger
 plt.rcParams.update({         # Set standard fontsizes for plot labels
@@ -135,3 +138,103 @@ plot_dic(plot_df, x="acid added (mL)", y="DIC-loss (umol/kg)", use_colorbar=True
 plot_dic(plot_df, x="Titration duration (seconds)", y="Percentage DIC (%)", use_colorbar=True)
 # Example 3: Another metric
 plot_dic(plot_df, x="Titration duration (seconds)", y="DIC-loss (umol/kg)", use_colorbar=True)
+
+
+def fit_dic_by_date(
+    data,
+    x_col,
+    y_col,
+    date_col="Date",
+    min_points=5,
+    figsize=(8,6),
+    show_all_points=True
+):
+    """
+    Linear fit of DIC metrics vs titration duration for each date with >= min_points.
+    Plots fits and prints slope, intercept, and R² for each valid date.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Input dataframe (must include x_col, y_col, and date_col).
+    x_col : str
+        Name of x variable (e.g., "Titration duration (seconds)").
+    y_col : str
+        Name of y variable (e.g., "DIC-loss (umol/kg)" or "Percentage DIC (%)").
+    date_col : str
+        Column with the date (converted to datetime before calling).
+    min_points : int
+        Minimum number of points required to compute a fit.
+    figsize : tuple
+        Size of output plot.
+    show_all_points : bool
+        If True, plot data points. If False, only show regression lines.
+    """
+    
+    # Ensure data is a copy
+    df = data.copy()
+    
+    # Convert date if necessary
+    df[date_col] = pd.to_datetime(df[date_col], dayfirst=True)
+    
+    # Drop missing values
+    df = df.dropna(subset=[x_col, y_col, date_col])
+    
+    # Prepare figure
+    plt.figure(figsize=figsize)
+
+    if show_all_points:
+        plt.scatter(df[x_col], df[y_col], alpha=0.2, label="All data", s=40)
+
+    # Store results
+    results = {}
+
+    # Loop per unique date
+    for date_value, group in df.groupby(date_col):
+        if len(group) < min_points:
+            continue  # Skip dates with too few points
+
+        X = group[x_col].values.reshape(-1, 1)
+        Y = group[y_col].values
+
+        model = LinearRegression().fit(X, Y)
+        slope = model.coef_[0]
+        intercept = model.intercept_
+        r2 = model.score(X, Y)
+
+        # Save results
+        results[date_value] = {"slope": slope, "intercept": intercept, "r2": r2}
+
+        # Fit line for plotting
+        x_fit = np.linspace(X.min(), X.max(), 200).reshape(-1, 1)
+        y_fit = model.predict(x_fit)
+
+        plt.plot(
+            x_fit,
+            y_fit,
+            linewidth=2,
+            label=f"{date_value.strftime('%d/%m/%Y')}  (R²={r2:.3f})"
+        )
+
+    # Labels
+    plt.xlabel(x_col)
+    plt.ylabel(y_col)
+    plt.title(f"Linear Fit: {y_col} vs {x_col} (per date)")
+    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+    plt.tight_layout()
+    plt.show()
+
+    return results
+
+
+results_dic_loss = fit_dic_by_date(
+    plot_df,
+    x_col="Titration duration (seconds)",
+    y_col="DIC-loss (umol/kg)"
+)
+
+results_dic_percentage = fit_dic_by_date(
+    plot_df,
+    x_col="Titration duration (seconds)",
+    y_col="Percentage DIC (%)"
+)

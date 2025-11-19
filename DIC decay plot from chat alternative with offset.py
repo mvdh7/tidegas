@@ -39,6 +39,7 @@ acid_col = "acid increments (mL)"      # incremental acid volume
 acid_total_col = "acid added (mL)"     # total acid added per run
 
 acid_totals_to_plot = [0.6,1.2,1.65,2.1,3, 4.2]       # <--- list of total acid volumes to process
+acid_totals_to_plot=[4.2]
 #acid_totals_to_plot = np.linspace(0,4.2,15).round(4)
 selected_dates = None                  # None or list of specific dates to include
 do_regression_lines = True
@@ -134,7 +135,7 @@ def plot_for_acid_total(df, acid_total):
     plt.ylabel("Relative DIC (% of reference)")
     plt.title(f"DIC decay vs waiting time — {acid_total:.2f} mL acid total")
     plt.axhline(100, color='gray', linestyle='--', linewidth=1)
-    plt.legend(title="Day — Acid increment", bbox_to_anchor=(1.05, 1), loc='upper left')
+    #plt.legend(title="Day — Acid increment", bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.grid(True)
     plt.tight_layout()
     plt.show()
