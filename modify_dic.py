@@ -13,6 +13,8 @@ dbs["titrant_molinity"] = 0.09941
 dbs["dic"] = 2220.91
 dbs["temperature_override"] = 25.1  # as the files record 0 °C
 dbs["salinity"] = 35.1  # TODO update
+# dbs["total_phosphate"] = 10
+# dbs['total_silicate'] = 100
 # TODO Workaround for density storing bug in v23.7.0
 dbs["analyte_mass"] = (
     1e-3
@@ -26,15 +28,7 @@ dbs["analyte_mass"] = (
 tt = calk.to_Titration(dbs, 199)
 ttt = tt.titration
 
-totals = {
-    k: ttt[k].values
-    for k in [
-        "dic",
-        "total_borate",
-        "total_fluoride",
-        "total_sulfate",
-    ]
-}
+totals = {k: ttt[k].values for k in ttt.columns if k.startswith("total_") or k == "dic"}
 
 # totals["dic"] *= 0
 # ^ make a numpy array (NOT pandas series) that is the same shape as
