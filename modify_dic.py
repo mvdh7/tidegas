@@ -88,7 +88,7 @@ co2s = pyco2.sys(
     temperature=ttt.temperature.values,
     salinity=tt.salinity,
     opt_pH_scale=3,
-    uncertainty_from={"par1": 2, "par2": 0.01},
+    uncertainty_from={"par1": 5, "par2": 0.01},
     uncertainty_into=["dic"],
 )
 
@@ -103,3 +103,18 @@ ax.set_ylim(2000, 2400)
 fig, ax = plt.subplots(dpi=300)
 ax.scatter(ttt.titrant_mass, sr.alkalinity_all)
 ax.set_title(sr.alkalinity)
+
+# What should the C value be?
+co2s_fco2 = pyco2.sys(
+    par1=alkalinity_mixture.values,
+    par2=500,
+    par1_type=1,
+    par2_type=5,
+    temperature=ttt.temperature.values,
+    salinity=tt.salinity,
+    uncertainty_from={"par1": 5, "par2": 50},
+    uncertainty_into=["dic"],
+)
+
+fig, ax = plt.subplots(dpi=300)
+ax.scatter(ttt.titrant_mass * 1e3, 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0])
