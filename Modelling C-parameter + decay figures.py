@@ -216,6 +216,9 @@ excel_df = pd.read_excel(excel_file)
 #set up day and month for filtering DBS and logbook file 
 day = 11
 month = 11
+day = 30
+month = 10
+
 date = str(day)+"/"+str(month)+"/2025"
 
 
@@ -264,7 +267,8 @@ plot_df["Titration duration (seconds)"] = pd.to_numeric(plot_df["Titration durat
 
 
 #get one titration
-tt = calk.to_Titration(dbs, 275)
+# tt = calk.to_Titration(dbs, 275)
+tt = calk.to_Titration(dbs, 200)
 ttt = tt.titration
 
 totals = {k: ttt[k].values for k in ttt.columns if k.startswith("total_") or k == "dic"}
@@ -272,6 +276,7 @@ totals = {k: ttt[k].values for k in ttt.columns if k.startswith("total_") or k =
 # totals["dic"] *= 0
 # ^ make a numpy array (NOT pandas series) that is the same shape as
 # ttt.titrant_mass.values that contains whatever DIC should be!
+ttt["titrant_volume"] = np.linspace(0, num = len(ttt.titrant_mass.values), stop = 4.05)
 
 k_constants = {
     k: ttt[k].values
@@ -339,7 +344,7 @@ co2s_fco2 = pyco2.sys(
 
 #%%
 fig, ax = plt.subplots(dpi=250)
-ax.scatter(ttt.titrant_mass * 1e3, 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0],label = "Equilibrium C expected from theory")
+ax.scatter(ttt["titrant_volume"], 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0],label = "Equilibrium C% expected from theory")
 # Plot fitted C values (simple scatter)
 ax.scatter(
     fit_df["acid_total_mL"], 
@@ -349,7 +354,7 @@ ax.scatter(
     label="Measured C(%) from exponential fits"
 )
 
-ax.set_xlabel("Titrant added (mg)  OR  Acid increment (mL)")
+ax.set_xlabel("Acid added (ml)")
 ax.set_ylabel("Relative DIC (%)")
 ax.legend()
 ax.grid(True)

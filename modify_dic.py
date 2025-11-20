@@ -13,7 +13,7 @@ dbs["titrant_molinity"] = 0.09941
 dbs["dic"] = 2220.91
 dbs["temperature_override"] = 25.1  # as the files record 0 °C
 dbs["salinity"] = 35.1  # TODO update
-# dbs["total_phosphate"] = 10
+dbs["total_phosphate"] = 100
 # dbs['total_silicate'] = 100
 # TODO Workaround for density storing bug in v23.7.0
 dbs["analyte_mass"] = (
@@ -86,29 +86,29 @@ co2s = pyco2.sys(
     uncertainty_into=["dic"],
 )
 
-# Plot expected DIC
-fig, ax = plt.subplots(dpi=300)
-ax.scatter(ttt.titrant_mass, co2s["dic"])
-ax.plot(ttt.titrant_mass, co2s["dic"] + co2s["u_dic"])
-ax.plot(ttt.titrant_mass, co2s["dic"] - co2s["u_dic"])
-ax.set_ylim(2000, 2400)
+# # Plot expected DIC
+# fig, ax = plt.subplots(dpi=300)
+# ax.scatter(ttt.titrant_mass, co2s["dic"])
+# ax.plot(ttt.titrant_mass, co2s["dic"] + co2s["u_dic"])
+# ax.plot(ttt.titrant_mass, co2s["dic"] - co2s["u_dic"])
+# ax.set_ylim(2000, 2400)
 
-# Plot alkalinity estimates through titration (tt.plot_alkalinity)
-fig, ax = plt.subplots(dpi=300)
-ax.scatter(ttt.titrant_mass, sr.alkalinity_all)
-ax.set_title(sr.alkalinity)
+# # Plot alkalinity estimates through titration (tt.plot_alkalinity)
+# fig, ax = plt.subplots(dpi=300)
+# ax.scatter(ttt.titrant_mass, sr.alkalinity_all)
+# ax.set_title(sr.alkalinity)
 
-# What should the C value be?
-co2s_fco2 = pyco2.sys(
-    par1=alkalinity_mixture.values,
-    par2=500,
-    par1_type=1,
-    par2_type=5,
-    temperature=ttt.temperature.values,
-    salinity=tt.salinity,
-    uncertainty_from={"par1": 5, "par2": 50},
-    uncertainty_into=["dic"],
-)
+# # What should the C value be?
+# co2s_fco2 = pyco2.sys(
+#     par1=alkalinity_mixture.values,
+#     par2=500,
+#     par1_type=1,
+#     par2_type=5,
+#     temperature=ttt.temperature.values,
+#     salinity=tt.salinity,
+#     uncertainty_from={"par1": 5, "par2": 50},
+#     uncertainty_into=["dic"],
+# )
 
-fig, ax = plt.subplots(dpi=300)
-ax.scatter(ttt.titrant_mass * 1e3, 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0])
+# fig, ax = plt.subplots(dpi=300)
+# ax.scatter(ttt.titrant_mass * 1e3, 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0])

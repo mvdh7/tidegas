@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 plt.close('all')
 #setup plotting parameters to make everything bigger
 plt.rcParams.update({         # Set standard fontsizes for plot labels
@@ -10,7 +11,7 @@ plt.rcParams.update({         # Set standard fontsizes for plot labels
     "legend.fontsize": 15,    # legend text
     "figure.titlesize": 20,   # figure title if used
      })
-
+plt.co
 
 #import csv file from local path
 path = "data/vindta/r2co2/acid_timings_titration.csv"
@@ -29,7 +30,7 @@ df_long[["day", "bottle"]] = df_long["sample"].str.split(" ", n=1, expand=True)
 df_long["bottle_num"] = df_long["bottle"].str.extract(r"(\d+)").astype(int)
 # Reorder columns
 df_long = df_long[["acid added (mL)", "day", "bottle_num", "timing"]]
-
+df_long["acid added (mL)"] = df_long["acid added (mL)"]-0.15
 
 #calculate mean and standard deviation
 stats = (
@@ -51,15 +52,17 @@ def plot_day(df_long, day):
     # Sort bottles numerically
     for bottle_num, group in subset.groupby("bottle_num"):
         label = f"bottle {bottle_num}"
-        plt.plot(group["acid added (mL)"], group["timing"], 
-                 marker="o", label=label,alpha =0.5)
+        plt.scatter(group["acid added (mL)"], group["timing"], 
+                 marker="o", label=label,alpha =1)
+        plt.errorbar(group["acid added (mL)"], group["timing"], yerr =np.ones(len(group["acid added (mL)"]))*2,
+                     fmt="none", ecolor="gray", capsize=5, alpha=0.7 )
     
     # Mean ± std for this day
     stats = subset.groupby("acid added (mL)")["timing"].agg(["mean","std"])
     plt.plot(stats.index, stats["mean"], color="black", marker="s", 
              linestyle="--", linewidth=2, label="Mean")
-    plt.errorbar(stats.index, stats["mean"], yerr=stats["std"], 
-                 fmt="none", ecolor="gray", capsize=5, alpha=0.7)
+    # plt.errorbar(stats.index, stats["mean"], yerr=stats["std"], 
+    #             fmt="none", ecolor="black", capsize=5, alpha=1)
     
     # Add sample size N
     n_bottles = subset["bottle_num"].nunique()
