@@ -227,14 +227,26 @@ def fit_dic_by_date(
     return results
 
 
-results_dic_loss = fit_dic_by_date(
+results_dic_loss_duration = fit_dic_by_date(
     plot_df,
     x_col="Titration duration (seconds)",
     y_col="DIC-loss (umol/kg)"
 )
 
-results_dic_percentage = fit_dic_by_date(
+results_dic_percentage_duration = fit_dic_by_date(
     plot_df,
     x_col="Titration duration (seconds)",
+    y_col="Percentage DIC (%)"
+)
+
+results_dic_loss_acid = fit_dic_by_date(
+    plot_df,
+    x_col="acid added (mL)",
+    y_col="DIC-loss (umol/kg)"
+)
+
+results_dic_percentage_acid = fit_dic_by_date(
+    plot_df,
+    x_col="acid added (mL)",
     y_col="Percentage DIC (%)"
 )

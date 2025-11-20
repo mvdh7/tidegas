@@ -1,18 +1,38 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Nov 19 14:19:38 2025
+
+@author: nicor
+"""
+
 # %%
 import calkulate as calk
 import PyCO2SYS as pyco2
 from matplotlib import pyplot as plt
+import pandas as pd
 
 # Import dbs file
 file_path = "data/vindta/r2co2/Nico"
 dbs = calk.read_dbs("data/vindta/r2co2/Nico.dbs", file_path=file_path)
+# Read your Excel file
+excel_file = "logbook_automated_by_python_testing.xlsx"
+excel_df = pd.read_excel(excel_file)
 
-# Just take data from 30 October
-dbs = dbs[(dbs.analysis_datetime.dt.month == 10) & (dbs.analysis_datetime.dt.day == 30)]
-dbs["titrant_molinity"] = 0.09941
-dbs["dic"] = 2220.91
-dbs["temperature_override"] = 25.1  # as the files record 0 °C
-dbs["salinity"] = 35.1  # TODO update
+
+#set up day and month for filtering DBS and logbook file 
+day = 11
+month = 11
+date = str(day)+"/"+str(month)+"/2025"
+
+
+#%%
+#update the dbs from the logbook, and specify a date
+# TODO might as well make this smarter and use
+dbs = dbs[(dbs.analysis_datetime.dt.month == month) & (dbs.analysis_datetime.dt.day == day)]
+dbs["titrant_molinity"]  = excel_df["Titrant Molinity"]  # Extract directly from excel, default = 0.1
+dbs["salinity"] =excel_df["Salinity"]  # Extract directly from excel, default = 30
+dbs["temperature_override"] = excel_df["Temperature"]  # Uses the temperature from the logbook
+dbs["dic"] = excel_df["Reference DIC (umol/kg)"]
 # dbs["total_phosphate"] = 10
 # dbs['total_silicate'] = 100
 # TODO Workaround for density storing bug in v23.7.0
@@ -24,10 +44,35 @@ dbs["analyte_mass"] = (
     )
 )
 
-# Get one titration
-tt = calk.to_Titration(dbs, 200)
+
+#%%
+# Make sure columns exist
+if not all(col in excel_df.columns for col in ["Calculated DIC (umol/kg)", "acid added (mL)", "date"]):
+    raise ValueError("Required columns missing in the Excel file.")
+
+# Drop rows with missing data in the columns we need
+plot_df = excel_df.dropna(subset=["Calculated DIC (umol/kg)", "acid added (mL)", "date", "waiting time (minutes)"]).copy()
+
+#select only the files without any (significant) waiting time 
+#plot_df =plot_df[plot_df["waiting time (minutes)"]<=0.05]
+plot_df =plot_df[plot_df["acid increments (mL)"]<=0.15]
+plot_df = plot_df[plot_df["date"]==date]
+plot_df = plot_df[plot_df["Mixing and waiting time (seconds)"]==4]
+#plot_df = plot_df[plot_df["batch"]==1]
+
+plot_df["acid added (mL)"] = pd.to_numeric(plot_df["acid added (mL)"], errors='coerce')
+plot_df["Calculated DIC (umol/kg)"] = pd.to_numeric(plot_df["Calculated DIC (umol/kg)"], errors='coerce')
+plot_df["Percentage DIC (%)"] = pd.to_numeric(100*plot_df["Calculated DIC (umol/kg)"]/plot_df["Reference DIC (umol/kg)"], errors='coerce')
+plot_df["DIC-loss (umol/kg)"] = pd.to_numeric(plot_df["Calculated DIC (umol/kg)"]-plot_df["Reference DIC (umol/kg)"], errors='coerce')
+plot_df["waiting time (minutes)"] = pd.to_numeric(plot_df["waiting time (minutes)"], errors='coerce')
+plot_df["Titration duration (seconds)"] = pd.to_numeric(plot_df["Titration duration (seconds)"], errors='coerce')
+
+
+
+#get one titration
+tt = calk.to_Titration(dbs, 275)
 ttt = tt.titration
-tt.plot_alkalinity()
+
 totals = {k: ttt[k].values for k in ttt.columns if k.startswith("total_") or k == "dic"}
 
 # totals["dic"] *= 0
@@ -85,14 +130,16 @@ co2s = pyco2.sys(
     uncertainty_from={"par1": 5, "par2": 0.01},
     uncertainty_into=["dic"],
 )
-
+#%%
 # Plot expected DIC
 fig, ax = plt.subplots(dpi=300)
 ax.scatter(ttt.titrant_mass, co2s["dic"])
 ax.plot(ttt.titrant_mass, co2s["dic"] + co2s["u_dic"])
 ax.plot(ttt.titrant_mass, co2s["dic"] - co2s["u_dic"])
-ax.set_ylim(2000, 2400)
 
+ax.scatter(plot_df["acid added (mL)"]/1000,plot_df["Calculated DIC (umol/kg)"])
+ax.set_ylim(1500, 2400)
+#%%
 # Plot alkalinity estimates through titration (tt.plot_alkalinity)
 fig, ax = plt.subplots(dpi=300)
 ax.scatter(ttt.titrant_mass, sr.alkalinity_all)
