@@ -75,7 +75,7 @@ ttt = tt.titration
 #tt.plot_alkalinity()
 totals = {k: ttt[k].values for k in ttt.columns if k.startswith("total_") or k == "dic"}
 
-totals["dic"] = totals["dic"] - np.linspace(0,200,28)*1e-6
+totals["dic"] = totals["dic"] - np.linspace(0,300,28)*1e-6
     
 # ^ make a numpy array (NOT pandas series) that is the same shape as
 # ttt.titrant_mass.values that contains whatever DIC should be!

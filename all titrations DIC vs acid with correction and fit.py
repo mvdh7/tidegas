@@ -1,7 +1,22 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 29 11:54:40 2025
+
+@author: nicor
+"""
+
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 29 11:31:57 2025
+
+@author: nicor
+"""
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
+from scipy.interpolate import CubicSpline
 
 #setup plotting parameters to make everything bigger
 plt.rcParams.update({         # Set standard fontsizes for plot labels
@@ -26,15 +41,15 @@ plot_df = df.dropna(subset=["Calculated DIC (umol/kg)", "acid added (mL)", "date
 #select only the files without any (significant) waiting time 
 plot_df =plot_df[plot_df["waiting time (minutes)"]<=0.05]
 plot_df =plot_df[plot_df["acid increments (mL)"]<=0.15]
-plot_df = plot_df[plot_df["date"]=="11/11/2025"]
+#plot_df = plot_df[plot_df["date"]=="11/11/2025"]
 
 plot_df = plot_df[plot_df["bottle"]!="1"]
 
 plot_df["Date"] = pd.to_datetime(plot_df["date"], format="%d/%m/%Y")
 
 # # Filter from a certain date onwards
-start_date = "10-11-2025"  # YYYY-MM-DD
-plot_df = plot_df[plot_df["Date"] >= start_date]
+# start_date = "10-11-2025"  # YYYY-MM-DD
+# plot_df = plot_df[plot_df["Date"] >= start_date]
 
 #possible to select a specific date, or exclude a date
 
@@ -80,87 +95,121 @@ plt.title("DIC vs Acid Added (11/11)")
 plt.legend(loc='upper right')
 plt.tight_layout()
 plt.show()
+#%%
 
+import seaborn as sns
+from scipy.optimize import curve_fit
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+plot_df = plot_df[plot_df["Titrant Volume (ml)"]!=4.8] # remove 4.8 mL acid
+# --- Prepare data: group by x ---
+grouped = plot_df.groupby("Titrant Volume (ml)")["In-situ DIC (%)"]
+x_unique = grouped.mean().index.values
+y_mean = grouped.mean().values
+y_std = grouped.std().values  # standard deviation
+
+# Optional: if any std is NaN (single measurement), replace with small value
+y_std = np.nan_to_num(y_std, nan=1.0)
+
+# --- Fit cubic polynomial to mean values ---
+# Use weights = 1 / std to account for variability
+coeffs = np.polyfit(x_unique, y_mean, 2, w=1/y_std)
+poly = np.poly1d(coeffs)
+
+# --- Evaluate fit on fine x-grid ---
+x_new = np.linspace(0, 4.2, 29)
+y_fit = poly(x_new)
+
+# --- Convert % DIC to absolute DIC ---
+ref_dic = plot_df["Reference DIC (umol/kg)"].iloc[0]
+absolute_dic = (y_fit / 100.0) * ref_dic
+
+# --- Store results ---
+fit_df_out = pd.DataFrame({
+    "Titrant Volume (ml)": x_new,
+    "Fitted In-situ DIC (%)": y_fit,
+    "Absolute DIC (umol/kg)": absolute_dic
+})
+fit_df_out = fit_df_out[fit_df_out["Titrant Volume (ml)"]!=4.8]
+# --- Optional: plot ---
+plt.figure()
+plt.grid(True, alpha=0.4)
+
+# Scatter all original points
+sns.scatterplot(data=plot_df, x="Titrant Volume (ml)", y="In-situ DIC (%)",
+                s=70, label="In-situ DIC")
+
+# Error bars for grouped means
+plt.errorbar(x_unique, y_mean, yerr=y_std, fmt='o', color='red', capsize=4,
+             label="Mean ± SD")
+
+# Polynomial fit
+plt.plot(x_new, y_fit, label="fit to mean", linewidth=3, color="Black")
+
+plt.xlabel("Titrant Volume (ml)")
+plt.ylabel("Remaining DIC (%)")
+plt.legend()
+plt.tight_layout()
+plt.show()
 
 #%%
-# Scatter plot with hue by date
+# Put in dataframe for convenience
+fit_df = pd.DataFrame({
+    "Titrant Volume (ml)": x_new,
+    "Fitted In-situ DIC (%)": y_fit,
+    "Absolute DIC (umol/kg)": absolute_dic
+})
+
+fit_df.head()
 plt.figure()
+plt.grid(True, alpha=0.4)
+
 sns.scatterplot(
     data=plot_df,
     x="Titrant Volume (ml)",
-    y="Calculated DIC (umol/kg)",
-    hue="date",
-    palette="tab20",
-    s=70
+    y="DIC (%)",
+    s=70,
+    label="Measured DIC"
+)
+
+plt.errorbar(
+    x=plot_df["Titrant Volume (ml)"],
+    y=plot_df["DIC (%)"],
+    yerr=1,
+    fmt="none",
+    capsize=4,
+    alpha=0.7
+)
+
+sns.scatterplot(
+    data=plot_df,
+    x="Titrant Volume (ml)",
+    y="In-situ DIC (%)",
+    s=70,
+    label="In-situ DIC"
+)
+
+plt.errorbar(
+    x=plot_df["Titrant Volume (ml)"],
+    y=plot_df["In-situ DIC (%)"],
+    yerr=1,
+    fmt="none",
+    capsize=4,
+    alpha=0.7
+)
+
+# Plot fitted exponential model
+plt.plot(
+    fit_df_out["Titrant Volume (ml)"],
+    fit_df_out["Fitted In-situ DIC (%)"],
+    label="Exponential fit",
+    linewidth=2
 )
 
 plt.xlabel("Titrant Volume (ml)")
-plt.ylabel("Remaining DIC (umol/kg)")
-plt.title("DIC vs Acid Added for Different Days")
-plt.legend(title="Date", bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.tight_layout()
-plt.show()
-
-
-#%%
-# Scatter plot with hue by date
-plt.figure()
-sns.scatterplot(
-    data=plot_df,
-    x="Titration duration (seconds)",
-    y="Calculated DIC (umol/kg)",
-    hue="date",
-    palette="tab20",
-    s=70
-)
-
-plt.xlabel("Titration duration (seconds)")
-plt.ylabel("Remaining DIC ")
-plt.title("DIC vs Acid Added for Different Days")
-plt.legend(title="Date", bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.tight_layout()
-plt.show()
-
-#%%
-# Scatter plot with hue by date
-plt.figure()
-sns.scatterplot(
-    data=plot_df,
-    x="Titration duration (seconds)",
-    y="Percentage DIC",
-    hue="date",
-    palette="tab20",
-    s=70
-)
-plt.errorbar(x=plot_df["Titration duration (seconds)"],y=plot_df["Percentage DIC"],yerr = 1,fmt="none", capsize=4, alpha=0.7)
-
-plt.xlabel("Titration duration (seconds)")
-plt.ylabel("Remaining DIC (%) ")
-plt.title("DIC vs Acid Added for Different Days")
-plt.legend(title="Date", bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.tight_layout()
-plt.show()
-
-#%%
-plt.figure()
-
-# Create the scatter manually using matplotlib for colorbar control
-scatter = plt.scatter(
-    plot_df["Titration duration (seconds)"],
-    plot_df["Calculated DIC (umol/kg)"],
-    c=plot_df["Date"].map(mdates.date2num),  # map dates to numbers
-    cmap="viridis",  # or "plasma", "cividis", etc.
-    s=70
-)
-
-plt.xlabel("Titration duration (seconds)")
-plt.ylabel("Calculated DIC (µmol/kg)")
-plt.title("DIC vs Acid Added Over Time")
-
-# Add a colorbar with formatted date ticks
-cbar = plt.colorbar(scatter)
-cbar.ax.set_ylabel("Date")
-cbar.ax.yaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%Y"))
-
+plt.ylabel("Remaining DIC (%)")
+plt.legend(loc="upper right")
 plt.tight_layout()
 plt.show()

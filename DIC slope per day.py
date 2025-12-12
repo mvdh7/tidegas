@@ -33,7 +33,7 @@ def extract_date_and_number(filename):
 
 # Sort files chronologically, then by index
 all_files = sorted(all_files, key=extract_date_and_number)
-selected_files = all_files[101:]  # optionally slice if needed
+selected_files = all_files[0:]  # optionally slice if needed
 
 # -----------------------------
 # Process each file

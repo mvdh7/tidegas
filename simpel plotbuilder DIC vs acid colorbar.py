@@ -13,7 +13,8 @@ plt.rcParams.update({         # Set standard fontsizes for plot labels
     "figure.titlesize": 20,   # figure title if used
      })
 # Read your Excel file
-excel_file = "logbook_automated_by_python_testing.xlsx"
+excel_file = "logbook_in_situ_corrected_testing.xlsx"
+excel_file = "C:/Users/nicor/OneDrive/Documenten/GitHub/tidegas/logbook_in_situ_corrected.xlsx" 
 df = pd.read_excel(excel_file)
 
 # Make sure columns exist
@@ -41,12 +42,15 @@ plot_df = plot_df[plot_df["Date"] >= start_date]
 
 #plot_df = plot_df[plot_df["batch"]==1]
 
-plot_df["acid added (mL)"] = pd.to_numeric(plot_df["acid added (mL)"], errors='coerce')
+plot_df["Titrant Volume (ml)"] = pd.to_numeric(plot_df["acid added (mL)"], errors='coerce')
 plot_df["Calculated DIC (umol/kg)"] = pd.to_numeric(plot_df["Calculated DIC (umol/kg)"], errors='coerce')
-plot_df["Percentage DIC (%)"] = pd.to_numeric(100*plot_df["Calculated DIC (umol/kg)"]/plot_df["Reference DIC (umol/kg)"], errors='coerce')
+plot_df["Calculated in situ DIC (umol/kg)"] =  pd.to_numeric(plot_df["Calculated in situ DIC (umol/kg)"], errors='coerce')
+plot_df["DIC (%)"] = pd.to_numeric(100*plot_df["Calculated DIC (umol/kg)"]/plot_df["Reference DIC (umol/kg)"], errors='coerce')
+plot_df["In-situ DIC (%)"] = pd.to_numeric(100*plot_df["Calculated in situ DIC (umol/kg)"]/plot_df["Reference DIC (umol/kg)"], errors='coerce')
+plot_df["In-situ DIC difference (umol)"] = pd.to_numeric(plot_df["Calculated in situ DIC (umol/kg)"]-plot_df["Calculated DIC (umol/kg)"], errors='coerce')
 plot_df["DIC-loss (umol/kg)"] = pd.to_numeric(plot_df["Calculated DIC (umol/kg)"]-plot_df["Reference DIC (umol/kg)"], errors='coerce')
-plot_df["waiting time (minutes)"] = pd.to_numeric(plot_df["waiting time (minutes)"], errors='coerce')
-plot_df["Titration duration (seconds)"] = pd.to_numeric(plot_df["Titration duration (seconds)"], errors='coerce')
+plot_df["waiting Time (minutes)"] = pd.to_numeric(plot_df["waiting time (minutes)"], errors='coerce')
+plot_df["Titration Duration (seconds)"] = pd.to_numeric(plot_df["Titration duration (seconds)"], errors='coerce')
 
 def plot_dic(
     data,
@@ -125,7 +129,22 @@ def plot_dic(
     
     
 # # Example 1: With legend (categorical hue)
-# plot_dic(plot_df, x="acid added (mL)", y="Calculated DIC (umol/kg)", use_colorbar=True)
+plot_dic(plot_df, x="Titrant Volume (ml)", y="Calculated DIC (umol/kg)", use_colorbar=True)
+
+plot_dic(plot_df, x="Titrant Volume (ml)", y="Calculated in situ DIC (umol/kg)", use_colorbar=True)
+
+plot_dic(plot_df, x="Titrant Volume (ml)", y="In-situ DIC (%)", use_colorbar=True)
+
+plot_dic(plot_df, x="Titrant Volume (ml)", y="In-situ DIC difference (umol)", use_colorbar=True)
+
+
+plot_dic(plot_df, x="Titration duration (seconds)", y="In-situ DIC difference (umol)", use_colorbar=True)
+#%%
+plot_dic(plot_df, x="Titration duration (seconds)", y="Calculated DIC (umol/kg)", use_colorbar=True)
+plot_dic(plot_df, x="Titration duration (seconds)", y="Calculated in situ DIC (umol/kg)", use_colorbar=True)
+plot_dic(plot_df, x="Titration duration (seconds)", y="In-situ DIC (%)", use_colorbar=True)
+
+#%%
 # plot_dic(plot_df, x="acid added (mL)", y="Percentage DIC (%)", use_colorbar=True)
 plot_dic(plot_df, x="acid added (mL)", y="DIC-loss (umol/kg)", use_colorbar=True)
 # Example 2: With colorbar (continuous date hue)

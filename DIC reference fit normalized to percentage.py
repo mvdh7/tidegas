@@ -122,7 +122,7 @@ def plot_reference_universal(selected_dates=None):
     for day_dt, day_label in zip(days_dt_sorted, days_labels):
         #print(day_dt)
         day_data = data[data["File date dt"] == day_dt]
-        if len(day_data) < 4:
+        if len(day_data) < 3:
             # keep existing rule: skip days with fewer than 4 points
             continue
         

@@ -1,7 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 29 11:31:57 2025
+
+@author: nicor
+"""
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
+from scipy.interpolate import CubicSpline
 
 #setup plotting parameters to make everything bigger
 plt.rcParams.update({         # Set standard fontsizes for plot labels
@@ -80,87 +88,100 @@ plt.title("DIC vs Acid Added (11/11)")
 plt.legend(loc='upper right')
 plt.tight_layout()
 plt.show()
+#%%
 
+import seaborn as sns
+from scipy.optimize import curve_fit
+
+# --- Exponential model ---
+def exp_model(x, a, b, c):
+    return a * np.exp(-b * x) + c
+
+# --- Prepare data ---
+fit_df = plot_df.sort_values(by="Titrant Volume (ml)")
+
+# Include all points (no trimming)
+x = fit_df["Titrant Volume (ml)"].values
+y = fit_df["In-situ DIC (%)"].values
+
+# Fit 3rd-order polynomial: y = ax^3 + bx^2 + cx + d
+coeffs = np.polyfit(x[:-2], y[:-2], 4)   # returns [a, b, c, d]
+poly = np.poly1d(coeffs)       # convenient polynomial object
+
+# Generate new x array from 0 → 4.05
+x_new = np.linspace(0, 4.05, 28)
+y_fit = poly(x_new)
+
+
+# --- Convert % DIC to absolute DIC ---
+ref_dic = plot_df["Reference DIC (umol/kg)"].iloc[0]
+absolute_dic = (y_fit / 100) * ref_dic
+
+# --- Store in dataframe ---
+fit_df_out = pd.DataFrame({
+    "Titrant Volume (ml)": x_new,
+    "Fitted In-situ DIC (%)": y_fit,
+    "Absolute DIC (umol/kg)": absolute_dic
+})
 
 #%%
-# Scatter plot with hue by date
+# Put in dataframe for convenience
+fit_df = pd.DataFrame({
+    "Titrant Volume (ml)": x_new,
+    "Fitted In-situ DIC (%)": y_fit,
+    "Absolute DIC (umol/kg)": absolute_dic
+})
+
+fit_df.head()
 plt.figure()
+plt.grid(True, alpha=0.4)
+
 sns.scatterplot(
     data=plot_df,
     x="Titrant Volume (ml)",
-    y="Calculated DIC (umol/kg)",
-    hue="date",
-    palette="tab20",
-    s=70
+    y="DIC (%)",
+    s=70,
+    label="Measured DIC"
+)
+
+plt.errorbar(
+    x=plot_df["Titrant Volume (ml)"],
+    y=plot_df["DIC (%)"],
+    yerr=1,
+    fmt="none",
+    capsize=4,
+    alpha=0.7
+)
+
+sns.scatterplot(
+    data=plot_df,
+    x="Titrant Volume (ml)",
+    y="In-situ DIC (%)",
+    s=70,
+    label="In-situ DIC"
+)
+
+plt.errorbar(
+    x=plot_df["Titrant Volume (ml)"],
+    y=plot_df["In-situ DIC (%)"],
+    yerr=1,
+    fmt="none",
+    color= "orange",
+    capsize=4,
+    alpha=0.7
+)
+
+# Plot fitted exponential model
+plt.plot(
+    fit_df_out["Titrant Volume (ml)"],
+    fit_df_out["Fitted In-situ DIC (%)"],
+    label="Exponential fit",
+    linewidth=2
 )
 
 plt.xlabel("Titrant Volume (ml)")
-plt.ylabel("Remaining DIC (umol/kg)")
-plt.title("DIC vs Acid Added for Different Days")
-plt.legend(title="Date", bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.tight_layout()
-plt.show()
-
-
-#%%
-# Scatter plot with hue by date
-plt.figure()
-sns.scatterplot(
-    data=plot_df,
-    x="Titration duration (seconds)",
-    y="Calculated DIC (umol/kg)",
-    hue="date",
-    palette="tab20",
-    s=70
-)
-
-plt.xlabel("Titration duration (seconds)")
-plt.ylabel("Remaining DIC ")
-plt.title("DIC vs Acid Added for Different Days")
-plt.legend(title="Date", bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.tight_layout()
-plt.show()
-
-#%%
-# Scatter plot with hue by date
-plt.figure()
-sns.scatterplot(
-    data=plot_df,
-    x="Titration duration (seconds)",
-    y="Percentage DIC",
-    hue="date",
-    palette="tab20",
-    s=70
-)
-plt.errorbar(x=plot_df["Titration duration (seconds)"],y=plot_df["Percentage DIC"],yerr = 1,fmt="none", capsize=4, alpha=0.7)
-
-plt.xlabel("Titration duration (seconds)")
-plt.ylabel("Remaining DIC (%) ")
-plt.title("DIC vs Acid Added for Different Days")
-plt.legend(title="Date", bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.tight_layout()
-plt.show()
-
-#%%
-plt.figure()
-
-# Create the scatter manually using matplotlib for colorbar control
-scatter = plt.scatter(
-    plot_df["Titration duration (seconds)"],
-    plot_df["Calculated DIC (umol/kg)"],
-    c=plot_df["Date"].map(mdates.date2num),  # map dates to numbers
-    cmap="viridis",  # or "plasma", "cividis", etc.
-    s=70
-)
-
-plt.xlabel("Titration duration (seconds)")
-plt.ylabel("Calculated DIC (µmol/kg)")
-plt.title("DIC vs Acid Added Over Time")
-
-# Add a colorbar with formatted date ticks
-cbar = plt.colorbar(scatter)
-cbar.ax.set_ylabel("Date")
-cbar.ax.yaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%Y"))
-
+plt.ylabel("Remaining DIC (%)")
+plt.title("DIC vs Acid Added (11/11)")
+plt.legend(loc="upper right")
 plt.tight_layout()
 plt.show()

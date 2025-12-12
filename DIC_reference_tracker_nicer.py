@@ -58,7 +58,7 @@ df_ref["Hour"] = df_ref["timestamp (UTC)"].apply(time_to_hours)
 # Exclusions (keep as before)
 #df_ref = df_ref[df_ref["File date label"] != "09/10/2025"]
 df_ref = df_ref[df_ref["File date label"] != "18/09/2025"]
-#df_ref = df_ref[df_ref["Sample type"] != "Crm"]
+df_ref = df_ref[df_ref["Sample type"] != "Crm"]
 df_ref = df_ref[df_ref["Sample type"] != "Nuts"]
 # -------------------------------------------------------------------
 # 6. Plot function with corrected chronological ordering for colors
@@ -126,8 +126,8 @@ def plot_reference_universal(selected_dates=None):
             )
     
     plt.xlabel("Time (hours, UTC)")
-    plt.ylabel("Negative removed DIC (µmol/L)")
-    plt.title("Reference measurements (color = day in chronological order, marker = sample type)")
+    plt.ylabel("DIC (µmol/L)")
+    plt.title("Reference measurements")
     plt.xticks(range(8, 16))  # universal 8:00–15:00
     plt.grid(True, alpha=0.3)
     plt.legend(title="Date — Sample type", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize="small")

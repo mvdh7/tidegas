@@ -86,29 +86,57 @@ co2s = pyco2.sys(
     uncertainty_into=["dic"],
 )
 
-# # Plot expected DIC
-# fig, ax = plt.subplots(dpi=300)
-# ax.scatter(ttt.titrant_mass, co2s["dic"])
-# ax.plot(ttt.titrant_mass, co2s["dic"] + co2s["u_dic"])
-# ax.plot(ttt.titrant_mass, co2s["dic"] - co2s["u_dic"])
-# ax.set_ylim(2000, 2400)
+# Plot expected DIC
+fig, ax = plt.subplots(dpi=300)
+ax.scatter(ttt.titrant_mass, co2s["dic"])
+ax.plot(ttt.titrant_mass, co2s["dic"] + co2s["u_dic"])
+ax.plot(ttt.titrant_mass, co2s["dic"] - co2s["u_dic"])
+ax.set_ylim(2000, 2400)
 
-# # Plot alkalinity estimates through titration (tt.plot_alkalinity)
-# fig, ax = plt.subplots(dpi=300)
-# ax.scatter(ttt.titrant_mass, sr.alkalinity_all)
-# ax.set_title(sr.alkalinity)
+# Plot alkalinity estimates through titration (tt.plot_alkalinity)
+fig, ax = plt.subplots(dpi=300)
+ax.scatter(ttt.titrant_mass, sr.alkalinity_all)
+ax.set_title(sr.alkalinity)
 
-# # What should the C value be?
-# co2s_fco2 = pyco2.sys(
-#     par1=alkalinity_mixture.values,
-#     par2=500,
-#     par1_type=1,
-#     par2_type=5,
-#     temperature=ttt.temperature.values,
-#     salinity=tt.salinity,
-#     uncertainty_from={"par1": 5, "par2": 50},
-#     uncertainty_into=["dic"],
-# )
+# What should the C value be?
+co2s_fco2 = pyco2.sys(
+    par1=alkalinity_mixture.values,
+    par2=500,
+    par1_type=1,
+    par2_type=5,
+    temperature=ttt.temperature.values,
+    salinity=tt.salinity,
+    uncertainty_from={"par1": 5, "par2": 50},
+    uncertainty_into=["dic"],
+)
 
-# fig, ax = plt.subplots(dpi=300)
-# ax.scatter(ttt.titrant_mass * 1e3, 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0])
+fig, ax = plt.subplots(dpi=300)
+ax.scatter(ttt.titrant_mass * 1e3, 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0])
+#%%
+# Calculate percentage values
+dic_percent = 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0]
+dic_plus_udic_percent = 100 * (co2s_fco2["dic"] + co2s_fco2["u_dic"]) / co2s_fco2["dic"][0]
+dic_minus_udic_percent = 100 * (co2s_fco2["dic"] - co2s_fco2["u_dic"]) / co2s_fco2["dic"][0]
+
+# Error bars
+y_err = 100 * co2s_fco2["u_dic"] / co2s_fco2["dic"][0]
+
+fig, ax = plt.subplots(dpi=300, figsize=(7,5))
+
+ax.errorbar(ttt.titrant_mass * 1e3, dic_percent, yerr=y_err, fmt='o', 
+            label='DIC ± uncertainty', capsize=3, color='tab:blue')
+
+# Optional dashed lines for upper/lower bounds
+ax.plot(ttt.titrant_mass * 1e3, dic_plus_udic_percent, '--', color='tab:green', label='DIC + u_dic')
+ax.plot(ttt.titrant_mass * 1e3, dic_minus_udic_percent, '--', color='tab:red', label='DIC - u_dic')
+
+# Labels, title, and font sizes
+ax.set_xlabel("Titrant Mass (mg)", fontsize=12)
+ax.set_ylabel("DIC (% of initial)", fontsize=12)
+ax.set_title("Titration of DIC with Uncertainty", fontsize=14)
+ax.tick_params(axis='both', which='major', labelsize=10)
+ax.legend(fontsize=10)
+ax.grid(True, linestyle='--', alpha=0.5)
+
+plt.tight_layout()
+plt.show()

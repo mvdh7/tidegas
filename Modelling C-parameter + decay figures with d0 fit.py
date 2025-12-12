@@ -20,11 +20,11 @@ from scipy.optimize import curve_fit
 import matplotlib.dates as mdates
 # -------- STYLE --------
 plt.rcParams.update({
-    "axes.labelsize": 16,
+    "axes.labelsize": 18,
     "axes.titlesize": 18,
-    "xtick.labelsize": 16,
-    "ytick.labelsize": 16,
-    "legend.fontsize": 15,
+    "xtick.labelsize": 18,
+    "ytick.labelsize": 18,
+    "legend.fontsize": 17,
     "figure.titlesize": 20,
 })
 
@@ -66,8 +66,8 @@ df["Relative DIC (%)"] = (df[dic_col] / df[ref_dic_col]) * 100
 
 df = df[df["Mixing and waiting time (seconds)"]==4]
 # Exponential decay model
-def exp_decay(t, t0, C, k):
-    return (100-C) * np.exp(-k * (t-t0)) + C
+def exp_decay(t,D0, C, k):
+    return (D0-C) * np.exp(-k * (t)) + C
 
 fit_results = []
 # -------- Function to plot for one acid total --------
@@ -128,30 +128,32 @@ def plot_acid_total(df, acid_total, use_colorbar_mode=False):
             label = f"{day} — {inc:.2f} mL"
         
         ax.scatter(x, y, color=color, marker=marker, s=70, label=label)
-        #ax.errorbar(x,y)
+        ax.errorbar(x,y,xerr=10/60, yerr = 1, color=color,marker = marker, capsize = 4, fmt= "none",alpha = 0.5)
         #ax.plot(x, y, color=color, alpha=0.6)
 
         # Fit
         if do_regression_lines and len(x) >= 5 and max(group[waiting_col])>=25:
             try:
-                p0 = [0, 95, 0.001]
-                bounds = ([min(x)-10, 0, 0], [max(x)+10, 120, 1])
+                p0 = [80, 95, 0.001]
+                bounds = ([50, 0, 0], [100, 120, 1])
                 popt, _ = curve_fit(exp_decay, x, y, p0=p0, bounds=bounds, maxfev=10000)
 
                 xs = np.linspace(x.min(), x.max(), 100)
                 ax.plot(xs, exp_decay(xs, *popt), linestyle='--', color=color, alpha=0.7)
 
                 # Collect fit parameters for side box
-                t0, C, k = popt
-                param_lines.append(f"{day}, inc={inc:.2f}:  k={k:.4f}, C={C:.1f}")
-                t0, C, k = popt
+                D0, C, k = popt
+                param_lines.append(f"{day}, incr={inc:.2f}:  k={k:.4f}, C={C:.1f}, D$_{{{0}}}$ = {D0:.1f}")
+                D0, C, k = popt
 
                 # ===== STORE C-VALUE =====
                 fit_results.append({
                     "date": day,
                     "acid_increment_mL": inc,
                     "acid_total_mL": acid_total,
-                    "C_percent": C})
+                    "C_percent": C,
+                    "k": k,
+                    "D0": D0})
                 
                     
                 print(f"{day}, increment {inc} mL:  C = {C:.2f}%")
@@ -164,12 +166,20 @@ def plot_acid_total(df, acid_total, use_colorbar_mode=False):
     if param_lines:
         textstr = "\n".join(param_lines)
         ax.text(
-            0.35, 0.85, textstr,
+            0.3, 0.70, textstr,
             transform=ax.transAxes,
             fontsize=14,
             va='center',
             bbox=dict(boxstyle="round", facecolor="white", alpha=0.9)
         )
+    textstr = r"$DIC(t) = (D_0-C)e^{-kt} + C$"
+    ax.text(
+        0.6, 0.9, textstr,
+        transform=ax.transAxes,
+        fontsize=14,
+        va='center',
+        bbox=dict(boxstyle="round", facecolor="white", alpha=0.9)
+    )
 
     # ------------------------- LABELS, COLORBAR, LEGEND -------------------------
     ax.set_xlabel("Waiting time (minutes)")
@@ -182,7 +192,7 @@ def plot_acid_total(df, acid_total, use_colorbar_mode=False):
     if use_colorbar_mode:
         cbar = fig.colorbar(sm, ax=ax)
         cbar.set_label("Date")
-        cbar.ax.yaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%Y"))
+        cbar.ax.yaxis.set_major_formatter(mdates.DateFormatter("%d/%m"))
     else:
         ax.legend(title="Day — Acid increment", bbox_to_anchor=(1.05, 1), loc='upper left')
 
@@ -343,24 +353,72 @@ co2s_fco2 = pyco2.sys(
 )
 
 #%%
-fig, ax = plt.subplots(dpi=250)
-ax.grid(True, zorder=0)
-ax.scatter(ttt["titrant_volume"], 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0],label = "Equilibrium C% expected from theory")
-# Plot fitted C values (simple scatter)
 
-ax.scatter(
+plt.rcParams.update({
+    "axes.labelsize": 18,
+    "axes.titlesize": 18,
+    "xtick.labelsize": 16,
+    "ytick.labelsize": 16,
+    "legend.fontsize": 17,
+    "figure.titlesize": 18,
+})
+
+plt.figure()
+plt.grid(True, zorder=0)
+#ax.scatter(ttt["titrant_volume"], 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0],label = "Equilibrium C% expected from theory")
+# Plot fitted C values (simple scatter)
+plt.scatter(
     fit_df["acid_total_mL"], 
     fit_df["C_percent"],
     color="red",
     s=80,
     marker= 'x',
-    label="Measured C(%) from exponential fits"
+    label="C(%) from exponential fits"
 )
 
-ax.set_xlabel("Acid added (ml)")
-ax.set_ylabel("Relative DIC (%)")
-ax.legend()
+plt.xlabel("Acid added (ml)")
+plt.ylabel("Equilibrium DIC (%)")
+plt.legend()
+plt.tight_layout()
+plt.show()
 
+
+plt.figure()
+plt.grid(True, zorder=0)
+#ax.scatter(ttt["titrant_volume"], 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0],label = "Equilibrium C% expected from theory")
+# Plot fitted C values (simple scatter)
+plt.scatter(
+    fit_df["acid_total_mL"], 
+    fit_df["k"],
+    color="red",
+    s=80,
+    marker= 'x',
+    label="k (1/min) from exponential fits"
+)
+
+plt.xlabel("Acid added (ml)")
+plt.ylabel("k (1/min)")
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+
+plt.figure()
+plt.grid(True, zorder=0)
+#ax.scatter(ttt["titrant_volume"], 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0],label = "Equilibrium C% expected from theory")
+# Plot fitted C values (simple scatter)
+plt.scatter(
+    fit_df["acid_total_mL"], 
+    fit_df["D0"],
+    color="red",
+    s=80,
+    marker= 'x',
+    label="D0(%) from exponential fits"
+)
+
+plt.xlabel("Acid added (ml)")
+plt.ylabel("Initial DIC (%)")
+plt.legend()
 plt.tight_layout()
 plt.show()
 
