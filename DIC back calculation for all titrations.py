@@ -10,7 +10,7 @@ import PyCO2SYS as pyco2
 file_path = "data/vindta/r2co2/Nico"
 dbs_file = f"{file_path}.dbs"
 excel_file = "logbook_automated_by_python_testing.xlsx"
-output_filename = "logbook_in_situ_corrected.xlsx"
+output_filename = "logbook_in_situ_corrected2.xlsx"
 
 # -------------------------------------------------------------
 # LOAD DBS AND EXCEL LOGBOOK
@@ -66,7 +66,7 @@ print(date_idx)
 # -------------------------------------------------------------
 # SETTINGS
 # -------------------------------------------------------------
-k_min = 0.03            # min^-1
+k_min = 0.0294            # min^-1
 k = k_min / 60          # convert to s^-1
 
 # -------------------------------------------------------------
@@ -87,7 +87,6 @@ log["Calculated in situ DIC (umol/kg)"] = np.nan
 
 #log = log[log["date"]!= "2025-11-10 00:00:00"] #skip the day where the bobometer was broken 
 # have to shift the rows in the logbook manually, otherwise fine. 
-#%%
 
 #%%
 # -------------------------------------------------------------

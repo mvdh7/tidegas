@@ -13,7 +13,7 @@ dbs["titrant_molinity"] = 0.09941
 dbs["dic"] = 2220.91
 dbs["temperature_override"] = 25.1  # as the files record 0 °C
 dbs["salinity"] = 35.1  # TODO update
-dbs["total_phosphate"] = 100
+# dbs["total_phosphate"] = 100
 # dbs['total_silicate'] = 100
 # TODO Workaround for density storing bug in v23.7.0
 dbs["analyte_mass"] = (

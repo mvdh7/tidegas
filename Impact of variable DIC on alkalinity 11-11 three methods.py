@@ -128,7 +128,7 @@ k_constants = {
 
 # ---------------------------------------------------------------
 dic_variants = {
-    "fit_plus_offset":  np.array((fit_df_out["Absolute DIC (umol/kg)"] + 88.792) * 1e-6),
+    "fit_plus_offset":  np.array((fit_df_out["Absolute DIC (umol/kg)"] + 134.72548572180767) * 1e-6),
     "fit_no_offset":    np.array((fit_df_out["Absolute DIC (umol/kg)"]) * 1e-6),
     "constant_ref":     np.ones(len(ttt.titrant_mass.values)) * ref_dic * 1e-6
 }

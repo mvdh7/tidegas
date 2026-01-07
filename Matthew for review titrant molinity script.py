@@ -19,8 +19,8 @@ excel_file = "logbook_automated_by_python_testing.xlsx"
 log = pd.read_excel(excel_file).copy()
 dbs["temperature_override"] = log["Temperature"]
 
-# dbs["cert. CRM CT"] = np.ones(221)*2029.34
-# dbs["cert. CRM AT"] = np.ones(221)*2183.64
+# dbs["cert. CRM CT"] = np.ones(338)*2029.34
+# dbs["cert. CRM AT"] = np.ones(338)*2183.64
 alkalinity_certified = np.empty(338)*np.nan
 alkalinity_certified[[98,267] ] = [2183.64, 2183.64]
 
