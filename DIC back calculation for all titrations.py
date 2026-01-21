@@ -10,7 +10,7 @@ import PyCO2SYS as pyco2
 file_path = "data/vindta/r2co2/Nico"
 dbs_file = f"{file_path}.dbs"
 excel_file = "logbook_automated_by_python_testing.xlsx"
-output_filename = "logbook_in_situ_corrected2.xlsx"
+output_filename = "logbook_in_situ_corrected.xlsx"
 
 # -------------------------------------------------------------
 # LOAD DBS AND EXCEL LOGBOOK

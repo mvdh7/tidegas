@@ -127,8 +127,8 @@ def plot_acid_total(df, acid_total, use_colorbar_mode=False):
             marker = "o"
             label = f"{day} — {inc:.2f} mL"
         
-        ax.scatter(x, y, color=color, marker=marker, s=70, label=label)
-        ax.errorbar(x,y,xerr=10/60, yerr = 1, color=color,marker = marker, capsize = 4, fmt= "none",alpha = 0.5)
+        ax.scatter(x, y, color=color, marker=marker, s=50, label=label)
+        ax.errorbar(x,y,xerr=10/60, yerr = 0.236, color=color,marker = marker, capsize = 4, fmt= "none",alpha = 0.5)
         #ax.plot(x, y, color=color, alpha=0.6)
 
         # Fit
@@ -150,10 +150,10 @@ def plot_acid_total(df, acid_total, use_colorbar_mode=False):
 
                 xs = np.linspace(x.min(), x.max(), 100)
                 ax.plot(xs, exp_decay(xs, *popt), linestyle='--', color=color, alpha=0.7)
-
+                
                 # Collect fit parameters for side box
                 D0, C, k = popt
-                param_lines.append(f"{day}, incr={inc:.2f}:  k={k:.4f}, C={C:.1f}, D$_{{{0}}}$ = {D0:.1f}")
+                param_lines.append(f"{day[0:5]}, Vol={acid_total:.2f}, incr={inc:.2f}:  k={k:.4f}, C={C:.1f}, D$_{{{0}}}$ = {D0:.1f}")
                 D0, C, k = popt
 
                 # ===== STORE C-VALUE =====
@@ -195,9 +195,9 @@ def plot_acid_total(df, acid_total, use_colorbar_mode=False):
     )
 
     # ------------------------- LABELS, COLORBAR, LEGEND -------------------------
-    ax.set_xlabel("Waiting time (minutes)")
+    ax.set_xlabel("Measuring delay (minutes)")
     ax.set_ylabel("Relative DIC (% of reference)")
-    ax.set_title(f"DIC decay — {acid_total:.2f} mL acid total")
+    #ax.set_title(f"DIC decay — {acid_total:.2f} mL acid total")
 
     ax.axhline(100, color='gray', linestyle='--', linewidth=1)
     
@@ -437,6 +437,113 @@ plt.ylabel("Initial DIC (%)")
 plt.legend()
 plt.tight_layout()
 plt.show()
+
+
+
+#%%
+# --- Split data by number of repeats ---
+counts = fit_df["acid_total_mL"].value_counts()
+multi_vols = counts[counts > 1].index
+single_vols = counts[counts == 1].index
+
+df_multi = fit_df[fit_df["acid_total_mL"].isin(multi_vols)]
+df_single = fit_df[fit_df["acid_total_mL"].isin(single_vols)]
+
+# --- Prepare boxplot data ---
+box_vols = np.sort(multi_vols)
+box_data = [
+    df_multi[df_multi["acid_total_mL"] == v]["k"].values
+    for v in box_vols
+]
+
+# --- Global statistics ---
+k_mean_all = fit_df["k"].mean()
+k_std_all = fit_df["k"].std()
+
+# --- Plot ---
+plt.figure()
+plt.grid(True, zorder=0)
+
+# Boxplots (multiple measurements)
+if len(box_vols) > 0:
+    dx = np.min(np.diff(np.sort(fit_df["acid_total_mL"].unique())))
+    plt.boxplot(
+        box_data,
+        positions=box_vols,
+        widths=0.3 * dx,
+        patch_artist=True,
+        boxprops=dict(facecolor="red", alpha=1),
+        medianprops=dict(color="black"),
+        whiskerprops=dict(color="black"),
+        capprops=dict(color="black")
+    )
+
+# Single measurements with original fit errors
+plt.scatter(
+    df_single["acid_total_mL"],
+    df_single["k"],
+    color="red",
+    marker="x",
+    s=80,
+    zorder=3, label = r"fitted $k$" 
+)
+
+plt.errorbar(
+    df_single["acid_total_mL"],
+    df_single["k"],
+    yerr=df_single["kerr"],
+    fmt="none",
+    color="red",
+    capsize=3,
+    zorder=3
+)
+
+# Global mean line and ±1σ band
+xspan = np.array([
+    fit_df["acid_total_mL"].min(),
+    fit_df["acid_total_mL"].max()
+])
+
+plt.plot(xspan, [k_mean_all, k_mean_all],
+         color="black", linestyle="--", zorder=1,label =r"mean $k$")
+
+plt.fill_between(
+    xspan,
+    k_mean_all - k_std_all,
+    k_mean_all + k_std_all,
+    color="gray",
+    alpha=0.25,
+    zorder=0, label = r"$\pm 1 \sigma$"
+)
+
+# X-axis ticks and labels
+all_vols = np.sort(fit_df["acid_total_mL"].unique())
+plt.xticks(all_vols, [f"{v:g}" for v in all_vols], rotation=45)
+plt.margins(x=0.05)
+
+# Labels
+plt.xlabel("Titrant Volume (mL)")
+plt.ylabel(r"$k$ $ (min^{-1})$")
+plt.legend()
+# Annotation box with mean ± std
+textstr = (
+    r"$\langle k \rangle = "
+    f"{k_mean_all:.3f}\ \mathrm{{min^{{-1}}}}$\n"
+    r"$\sigma = "
+    f"{k_std_all:.3f}\ \mathrm{{min^{{-1}}}}$"
+)
+
+plt.text(
+    0.7, 0.95,
+    textstr,
+    transform=plt.gca().transAxes,
+    fontsize=11,
+    verticalalignment="top",
+    bbox=dict(boxstyle="round", facecolor="white", alpha=0.85)
+)
+plt.tight_layout()
+plt.show()
+
 #%%
 def linear_jitter(x_values, max_offset=0.05):
     """
@@ -490,7 +597,7 @@ plt.scatter(
     zorder=3
 )
 
-plt.xlabel("Acid added (mL)")
+plt.xlabel("Titrant Volume (mL)")
 plt.ylabel("C (%)")
 plt.legend()
 plt.tight_layout()
@@ -563,70 +670,3 @@ ax.legend()
 fig.tight_layout()
 plt.show()
 
-#%%
-plt.rcParams.update({
-    "axes.labelsize": 18,
-    "axes.titlesize": 18,
-    "xtick.labelsize": 16,
-    "ytick.labelsize": 16,
-    "legend.fontsize": 14,
-    "figure.titlesize": 18,
-})
-x = ttt.titrant_mass *1e3
-x = ttt.pH
-y = 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0]
-y_error = 100 * co2s_fco2["u_dic"] / co2s_fco2["dic"][0]
-
-# --- Linear fit using first 15 points ---
-x_lin = x[:15]
-y_lin = y[:15]
-m, b = np.polyfit(x_lin, y_lin, 1)
-print(f"Linear fit: slope = {m:.3f}, intercept = {b:.3f}")
-
-# --- Plateau: average of last 10 points ---
-plateau = np.mean(y[-10:])
-print(f"Plateau value (avg of last 10 points) = {plateau:.3f}")
-
-# --- Piecewise ---
-def linear_then_plateau(x):
-    x_intercept = (plateau - b) / m
-    return np.where(x < x_intercept, m*x + b, plateau)
-
-# --- Figure structure ---
-fig = plt.figure(figsize=(7,5), dpi=250)
-ax = fig.add_subplot(111)
-ax.grid(True, zorder=0)
-
-
-# --- Data ---
-ax.scatter(x, y, marker="_", s=100,
-           label="Theoretical C(%) from PyCO2SYS", zorder=3)
-ax.errorbar(x, y, yerr=y_error, fmt="none", capsize=3, zorder=3)
-
-ax.scatter(
-    fit_df["acid_total_mL"],
-    fit_df["C_percent"],
-    color="red", s=60, marker="x",
-    label="Measured C(%) from exponential fits", zorder=5
-)
-ax.errorbar(fit_df["acid_total_mL"], fit_df["C_percent"],fit_df["Cerr"], color = "red", fmt= "none", capsize = 3)
-# --- Shaded regions for fit windows ---
-ax.axvspan(x_lin.iloc[0], x_lin.iloc[-1], 
-           color='blue', alpha=0.12, zorder=1, label="Linear-fit region")
-
-ax.axvspan(x.iloc[-10], x.iloc[-1], 
-           color='green', alpha=0.12, zorder=1, label="Plateau region")
-
-# --- Fitted piecewise line ---
-x_fit = np.linspace(x.min(), x.max(), 300)
-ax.plot(x_fit, linear_then_plateau(x_fit), 'r--',
-        label="Linear→plateau model", zorder=4)
-
-# # --- Labels ---
-ax.set_xlabel("Titrant Volume (mL)")
-ax.set_ylabel("C (%)")
-ax.tick_params()
-ax.legend()
-
-fig.tight_layout()
-plt.show()

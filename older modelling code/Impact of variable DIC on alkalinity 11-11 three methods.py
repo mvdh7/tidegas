@@ -106,6 +106,11 @@ fit_df_out = pd.DataFrame({
 # Prepare titration object
 # ---------------------------------------------------------------
 tt = calk.to_Titration(dbs, 275)
+# Extract one titration to plot
+tt.plot_pH()
+tt.plot_components()
+tt.plot_alkalinity()
+#%%
 ttt = tt.titration
 
 base_totals = {k: ttt[k].values for k in ttt.columns if k.startswith("total_") or k == "dic"}
@@ -127,10 +132,10 @@ k_constants = {
 # DIC variants for looping
 
 # ---------------------------------------------------------------
-dic_variants = {
-    "fit_plus_offset":  np.array((fit_df_out["Absolute DIC (umol/kg)"] + 134.72548572180767) * 1e-6),
-    "fit_no_offset":    np.array((fit_df_out["Absolute DIC (umol/kg)"]) * 1e-6),
-    "constant_ref":     np.ones(len(ttt.titrant_mass.values)) * ref_dic * 1e-6
+dic_variants = {"DIC standard":     np.array(ttt["dic"]),
+    "DIC fit":    np.array((fit_df_out["Absolute DIC (umol/kg)"]) * 1e-6),
+    "DIC fit offset":  np.array((fit_df_out["Absolute DIC (umol/kg)"] + 134.38256354719806) * 1e-6),
+    "DIC fit offset_upper":  np.array((fit_df_out["Absolute DIC (umol/kg)"]* + 134.38256354719806) * 1e-6)
 }
 
 variant_results = {}
@@ -153,16 +158,16 @@ for name, dic_array in dic_variants.items():
         totals_var,
         k_constants,
     )
-
     # Store alkalinity evolution through the titration
     df_var = pd.DataFrame({
         "titrant_mass": ttt.titrant_mass.values,
         "Titrant Volume (ml)": np.linspace(0,4.05,len(ttt.titrant_mass)),
         "alkalinity_all": sr_var.alkalinity_all,
         "alkalinity_final": sr_var.alkalinity,
+        "alkalinity_error":  np.std(sr_var.alkalinity_all[ttt.used]), 
         "variant": name
     })
-
+  
     variant_results[name] = df_var
 
 #%%
@@ -170,6 +175,42 @@ for name, dic_array in dic_variants.items():
 # Plot alkalinity for all DIC variants
 # ---------------------------------------------------------------
 plt.figure(figsize=(9, 6))
+# ---------------------------------------------------------------
+# Build table data
+# ---------------------------------------------------------------
+table_rows = []
+for name, dfv in variant_results.items():
+    final_val = dfv["alkalinity_final"].iloc[0]
+    std_val   = dfv["alkalinity_error"].iloc[0]
+    table_rows.append([
+        name,
+        f"{final_val:.1f} ± {std_val:.1f}"
+    ])
+
+# Column labels
+col_labels = ["Variant", "Total Alkalinity (µmol/kg)"]
+
+# ---------------------------------------------------------------
+# Add table to plot
+# ---------------------------------------------------------------
+table = plt.table(
+    cellText=table_rows,
+    colLabels=col_labels,
+    loc="upper right",
+    colLoc="center",
+    cellLoc="center",
+    bbox=[0.62, 0.05, 0.36, 0.35]  # [left, bottom, width, height]
+)
+
+# Style table
+table.auto_set_font_size(False)
+table.set_fontsize(9)
+table.scale(1, 1.2)
+
+# Slight transparency so plot remains visible
+for _, cell in table.get_celld().items():
+    cell.set_alpha(0.85)
+    
 plt.grid(True, alpha=0.4)
 ax = plt.gca()
 for name, dfv in variant_results.items():
@@ -180,11 +221,11 @@ for name, dfv in variant_results.items():
     )
 # ---- Manual shading: indices 17 to 24 ----
 shade_start  =dfv["Titrant Volume (ml)"].iloc[17]
-shade_end   = dfv["Titrant Volume (ml)"].iloc[24]
+shade_end   = dfv["Titrant Volume (ml)"].iloc[23]
 
 ax.axvspan(shade_start, shade_end, color="gray", alpha=0.25, label="Used region")
-
-plt.xlabel("Titrant volume (ml)")
+ax.axhline(tt.alkalinity,alpha =0.5, color = 'black',  label="Final value", zorder=-1)
+plt.xlabel("Titrant volume (mL)")
 plt.ylabel("Alkalinity (µmol/kg)")
 #plt.title("Alkalinity vs. Titrant Mass for Different DIC Variants")
 plt.legend()

@@ -39,7 +39,7 @@ type_marker = {stype: markers[i] for i, stype in enumerate(sample_types)}
 # Plot
 # -----------------------------------------------
 plt.figure()
-#sns.set(style="whitegrid")
+plt.grid(alpha = 0.3)
 
 for stype in sample_types:
     subset = results_df[results_df["sample type"] == stype]
@@ -63,6 +63,8 @@ plt.show()
 
 #correcting for titrant molinity 
 plt.figure()
+
+plt.grid(alpha = 0.3)
 for stype in sample_types:
     subset = results_df[results_df["sample type"] == stype]
     plt.scatter(
@@ -77,7 +79,7 @@ for stype in sample_types:
 
 plt.xlabel("Alkalinity (µmol/kg)")
 plt.ylabel(r"Slope/($\frac{\Delta DIC (\%)}{acid (mM)}$)")
-plt.title("Slope (Titrant Acid Amount) vs Sample Type")
+#plt.title("Slope (Titrant Acid Amount) vs Sample Type")
 plt.legend(title="Sample Type",fontsize = 14)
 plt.tight_layout()
 plt.show()

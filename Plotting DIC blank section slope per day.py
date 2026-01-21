@@ -47,6 +47,8 @@ results = {
     "final_difference": [],
 }
 
+
+#
 for file_name in selected_files:
     file_path = os.path.join(folder_path, file_name)
     try:
@@ -140,8 +142,8 @@ sorted_dates = sorted(dates_sorted, key=lambda d: datetime.strptime(d, "%d-%m"))
 
 data = [df_results.loc[df_results["date"] == d, "fit_slope"].values for d in sorted_dates]
 plt.violinplot(data, showmeans=True)
-plt.xticks(range(1, len(sorted_dates)+1), sorted_dates, rotation=45)
-plt.title(f"Slope Distribution per Day (Last {FIT_WINDOW}s)")
+plt.xticks(range(1, len(sorted_dates)+1), sorted_dates, rotation=90)
+#plt.title(f"Slope Distribution per Day (Last {FIT_WINDOW}s)")
 plt.ylabel("Slope [µA·s per s]")
 plt.tight_layout()
 plt.show()
@@ -157,8 +159,8 @@ plt.fill_between(
     alpha=0.2,
     label="±1 SD"
 )
-plt.xticks(rotation=45)
-plt.title(f"Average Slope per Day (±1 SD, Last {FIT_WINDOW}s)")
+plt.xticks(rotation=90)
+#plt.title(f"Average Slope per Day (±1 SD, Last {FIT_WINDOW}s)")
 plt.xlabel("Date")
 plt.ylabel("Slope [µA·s per s]")
 plt.legend()
@@ -176,8 +178,8 @@ plt.fill_between(
     alpha=0.25,
     label="±1 SD"
 )
-plt.xticks(rotation=45)
-plt.title("Average Final Difference per Day (Negative Removed − Integrated)")
+plt.xticks(rotation=90)
+#plt.title("Average Final Difference per Day (Negative Removed − Integrated)")
 plt.xlabel("Date")
 plt.ylabel("Δ Current [µA·s]")
 plt.legend()

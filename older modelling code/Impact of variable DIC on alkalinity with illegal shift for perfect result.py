@@ -36,8 +36,8 @@ excel_df = pd.read_excel(excel_file)
 
 
 #set up day and month for filtering DBS and logbook file 
-day = 30
-month = 10
+day = 11
+month = 11
 date = str(day)+"/"+str(month)+"/2025"
 
 
@@ -74,14 +74,14 @@ plot_df = df.dropna(subset=["Calculated DIC (umol/kg)", "acid added (mL)", "date
 #select only the files without any (significant) waiting time 
 plot_df =plot_df[plot_df["waiting time (minutes)"]<=0.05]
 plot_df =plot_df[plot_df["acid increments (mL)"]<=0.15]
-plot_df = plot_df[plot_df["date"]=="30/10/2025"]
+plot_df = plot_df[plot_df["date"]=="11/11/2025"]
 
 plot_df = plot_df[plot_df["bottle"]!="1"]
 
 plot_df["Date"] = pd.to_datetime(plot_df["date"], format="%d/%m/%Y")
 
 # # Filter from a certain date onwards
-start_date = "30-10-2025"  # YYYY-MM-DD
+start_date = "11-11-2025"  # YYYY-MM-DD
 plot_df = plot_df[plot_df["Date"] >= start_date]
 
 #possible to select a specific date, or exclude a date
@@ -112,7 +112,7 @@ sns.scatterplot(
     label = "Measured DIC"
 )
 
-plt.errorbar(x=plot_df["Titrant Volume (ml)"],y=plot_df["DIC (%)"],yerr = 1,fmt="none", capsize=4, alpha=0.7)
+plt.errorbar(x=plot_df["Titrant Volume (ml)"],y=plot_df["DIC (%)"],yerr = 0.236,fmt="none", capsize=4, alpha=0.7)
 sns.scatterplot(
     data=plot_df,
     x="Titrant Volume (ml)",
@@ -225,7 +225,7 @@ plt.show()
 #combine the fit with the alkalinity script
 
 #get one titration
-tt = calk.to_Titration(dbs, 200)
+tt = calk.to_Titration(dbs, 275)
 ttt = tt.titration
 #tt.plot_alkalinity()
 totals = {k: ttt[k].values for k in ttt.columns if k.startswith("total_") or k == "dic"}

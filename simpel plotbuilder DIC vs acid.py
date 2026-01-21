@@ -26,20 +26,22 @@ plot_df = df.dropna(subset=["Calculated DIC (umol/kg)", "acid added (mL)", "date
 #select only the files without any (significant) waiting time 
 plot_df =plot_df[plot_df["waiting time (minutes)"]<=0.05]
 plot_df =plot_df[plot_df["acid increments (mL)"]<=0.15]
-plot_df = plot_df[plot_df["date"]=="11/11/2025"]
+plot_df =plot_df[plot_df["Mixing and waiting time (seconds)"]==4]
 
 plot_df = plot_df[plot_df["bottle"]!="1"]
 
 plot_df["Date"] = pd.to_datetime(plot_df["date"], format="%d/%m/%Y")
 
 # # Filter from a certain date onwards
-start_date = "10-11-2025"  # YYYY-MM-DD
+start_date = "10-22-2025"  # MM-DD-YYYY
 plot_df = plot_df[plot_df["Date"] >= start_date]
 
-#possible to select a specific date, or exclude a date
+#possible to select a specific date, or exclude a date. Excluded dates where bobometer was misbehaving due to nitrogen leaks 
+plot_df = plot_df[plot_df["date"]!= "10/11/2025"]
+plot_df = plot_df[plot_df["date"]!= "7/11/2025"]
+plot_df = plot_df[plot_df["date"]!= "5/11/2025"]
 
 
-#plot_df = plot_df[plot_df["batch"]==1]
 
 plot_df["Titrant Volume (ml)"] = pd.to_numeric(plot_df["acid added (mL)"], errors='coerce')
 plot_df["Calculated DIC (umol/kg)"] = pd.to_numeric(plot_df["Calculated DIC (umol/kg)"], errors='coerce')
@@ -127,12 +129,12 @@ plt.figure()
 sns.scatterplot(
     data=plot_df,
     x="Titration duration (seconds)",
-    y="Percentage DIC",
+    y="DIC (%)",
     hue="date",
     palette="tab20",
     s=70
 )
-plt.errorbar(x=plot_df["Titration duration (seconds)"],y=plot_df["Percentage DIC"],yerr = 1,fmt="none", capsize=4, alpha=0.7)
+plt.errorbar(x=plot_df["Titration duration (seconds)"],y=plot_df["DIC (%)"],yerr = 1,fmt="none", capsize=4, alpha=0.7)
 
 plt.xlabel("Titration duration (seconds)")
 plt.ylabel("Remaining DIC (%) ")
@@ -146,16 +148,39 @@ plt.figure()
 
 # Create the scatter manually using matplotlib for colorbar control
 scatter = plt.scatter(
-    plot_df["Titration duration (seconds)"],
+    plot_df["Titrant Volume (ml)"],
     plot_df["Calculated DIC (umol/kg)"],
     c=plot_df["Date"].map(mdates.date2num),  # map dates to numbers
     cmap="viridis",  # or "plasma", "cividis", etc.
     s=70
 )
 
-plt.xlabel("Titration duration (seconds)")
+plt.xlabel("Titrant Volume (mL)")
 plt.ylabel("Calculated DIC (µmol/kg)")
-plt.title("DIC vs Acid Added Over Time")
+#plt.title("DIC vs Acid Added Over Time")
+
+# Add a colorbar with formatted date ticks
+cbar = plt.colorbar(scatter)
+cbar.ax.set_ylabel("Date")
+cbar.ax.yaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%Y"))
+
+plt.tight_layout()
+plt.show()
+#%%
+plt.figure()
+
+# Create the scatter manually using matplotlib for colorbar control
+scatter = plt.scatter(
+    plot_df["Titrant Volume (ml)"],
+    plot_df["DIC (%)"],
+    c=plot_df["Date"].map(mdates.date2num),  # map dates to numbers
+    cmap="viridis",  # or "plasma", "cividis", etc.
+    s=70
+)
+
+plt.xlabel("Titrant Volume (mL)")
+plt.ylabel("Remaining DIC (%) ")
+#plt.title("DIC vs Acid Added Over Time")
 
 # Add a colorbar with formatted date ticks
 cbar = plt.colorbar(scatter)

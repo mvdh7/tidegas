@@ -19,15 +19,9 @@ tfiles = os.listdir(file_path)
 
 #this script loads the logbook and transforms it into a dataframe
 #From this dataframe input parameters are extracted, and output is saved in the logbook
-#inputs: acid increments (mL), Titrant Molinity, Salinity, Calculated DIC ug/kg, raw DIC ug/L
-
-
 # the column acid increments (mL) is used to update the datfile, using the correct spacing in between datapoints
 
-
-#
 # TODO add a check for increments, calk.read_dat does NOT work for single step titrations (or aborted runs)
-
 # solution, build something myself or skip the ones where acid
 # Quick fix skips them for now, but ideally new function
 # it also does not work for low acid
@@ -115,7 +109,7 @@ excel_df["Calculated DIC (umol/kg)"] = excel_df["Calculated DIC (umol/L)"] / cal
     salinity=dbs.salinity,
 )
 
-# TODO is reference always taken at room temperature?!?!?!?!
+# TODO assumes reference is always taken at room temperature of 21C
 #Convert the reference to umol/kg using density
 excel_df["Reference DIC (umol/kg)"] = excel_df["Reference DIC (umol/L)"]/calk.density.seawater_1atm_MP81(
     temperature=21, salinity=dbs.salinity)

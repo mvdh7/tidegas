@@ -1,0 +1,437 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 29 11:31:57 2025
+
+@author: nicor
+"""
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.dates as mdates
+from scipy.interpolate import CubicSpline
+import calkulate as calk
+import PyCO2SYS as pyco2
+from matplotlib import pyplot as plt
+import pandas as pd
+import numpy as np 
+
+#setup plotting parameters to make everything bigger
+plt.rcParams.update({         # Set standard fontsizes for plot labels
+    "axes.labelsize": 18,     # x and y axis labels
+    "axes.titlesize": 18,     # plot title
+    "xtick.labelsize": 18,    # x tick labels
+    "ytick.labelsize": 18,    # y tick labels
+    "legend.fontsize": 16,    # legend text
+    "figure.titlesize": 20,   # figure title if used
+     })
+
+
+# Import dbs file
+file_path = "data/vindta/r2co2/Nico"
+dbs = calk.read_dbs("data/vindta/r2co2/Nico.dbs", file_path=file_path)
+# Read your Excel file
+excel_file = "logbook_automated_by_python_testing.xlsx"
+excel_df = pd.read_excel(excel_file)
+
+
+#set up day and month for filtering DBS and logbook file 
+day = 11
+month = 11
+date = str(day)+"/"+str(month)+"/2025"
+
+
+#%%
+#update the dbs from the logbook, and specify a date
+# TODO might as well make this smarter and use
+dbs = dbs[(dbs.analysis_datetime.dt.month == month) & (dbs.analysis_datetime.dt.day == day)]
+dbs["titrant_molinity"]  = excel_df["Titrant Molinity"]# -0.005 # Extract directly from excel, default = 0.1
+dbs["salinity"] =excel_df["Salinity"]  # Extract directly from excel, default = 30
+dbs["temperature_override"] = excel_df["Temperature"]  # Uses the temperature from the logbook
+dbs["dic"] = excel_df["Reference DIC (umol/kg)"]
+# dbs["total_phosphate"] = 10
+# dbs['total_silicate'] = 100
+# TODO Workaround for density storing bug in v23.7.0
+dbs["analyte_mass"] = (
+    1e-3
+    * dbs.analyte_volume
+    / calk.density.seawater_1atm_MP81(
+        temperature=dbs.temperature_override, salinity=dbs.salinity
+    )
+)
+
+# Read your Excel file
+excel_file = "logbook_automated_by_python_testing.xlsx"
+df = pd.read_excel(excel_file)
+
+# Make sure columns exist
+if not all(col in df.columns for col in ["Calculated DIC (umol/kg)", "acid added (mL)", "date"]):
+    raise ValueError("Required columns missing in the Excel file.")
+
+# Drop rows with missing data in the columns we need
+plot_df = df.dropna(subset=["Calculated DIC (umol/kg)", "acid added (mL)", "date", "waiting time (minutes)"]).copy()
+
+#select only the files without any (significant) waiting time 
+plot_df =plot_df[plot_df["waiting time (minutes)"]<=0.05]
+plot_df =plot_df[plot_df["acid increments (mL)"]<=0.15]
+plot_df = plot_df[plot_df["date"]=="11/11/2025"]
+
+plot_df = plot_df[plot_df["bottle"]!="1"]
+
+plot_df["Date"] = pd.to_datetime(plot_df["date"], format="%d/%m/%Y")
+
+# # Filter from a certain date onwards
+start_date = "11-11-2025"  # YYYY-MM-DD
+plot_df = plot_df[plot_df["Date"] >= start_date]
+
+#possible to select a specific date, or exclude a date
+
+
+#plot_df = plot_df[plot_df["batch"]==1]
+
+plot_df["Titrant Volume (ml)"] = pd.to_numeric(plot_df["acid added (mL)"], errors='coerce')
+plot_df["Calculated DIC (umol/kg)"] = pd.to_numeric(plot_df["Calculated DIC (umol/kg)"], errors='coerce')
+plot_df["Calculated in situ DIC (umol/kg)"] =  pd.to_numeric(plot_df["Calculated in situ DIC (umol/kg)"], errors='coerce')
+plot_df["DIC (%)"] = pd.to_numeric(100*plot_df["Calculated DIC (umol/kg)"]/plot_df["Reference DIC (umol/kg)"], errors='coerce')
+plot_df["In-situ DIC (%)"] = pd.to_numeric(100*plot_df["Calculated in situ DIC (umol/kg)"]/plot_df["Reference DIC (umol/kg)"], errors='coerce')
+plot_df["In-situ DIC difference (umol)"] = pd.to_numeric(plot_df["Calculated in situ DIC (umol/kg)"]-plot_df["Calculated DIC (umol/kg)"], errors='coerce')
+plot_df["DIC-loss (umol/kg)"] = pd.to_numeric(plot_df["Calculated DIC (umol/kg)"]-plot_df["Reference DIC (umol/kg)"], errors='coerce')
+plot_df["waiting Time (minutes)"] = pd.to_numeric(plot_df["waiting time (minutes)"], errors='coerce')
+plot_df["Titration Duration (seconds)"] = pd.to_numeric(plot_df["Titration duration (seconds)"], errors='coerce')
+
+#%%
+
+#load errors from seperate file 
+dic_unc = pd.read_csv("DIC_total_uncertainty_vs_titrant_volume.csv")
+plot_df = plot_df.merge(
+    dic_unc,
+    left_on="Titrant Volume (ml)",
+    right_on="titrant_volume_mL",
+    how="left"
+)
+#%%
+# Scatter plot 
+plt.figure()
+plt.grid(True,alpha =0.4)
+plt.scatter(
+    data=plot_df,
+    x="Titrant Volume (ml)",
+    y="DIC (%)",
+    s=50,
+    label = "Measured DIC"
+)
+
+plt.errorbar(x=plot_df["Titrant Volume (ml)"],y=plot_df["DIC (%)"],yerr = 0.236,fmt="none", capsize=4, alpha=0.7)
+plt.scatter(
+    data=plot_df,color = 'red',
+    x="Titrant Volume (ml)",
+    y="In-situ DIC (%)",
+    s=50,
+    label = "In-situ DIC"
+)
+plt.errorbar(x=plot_df["Titrant Volume (ml)"],y=plot_df["In-situ DIC (%)"],color = 'red', yerr = plot_df["total_DIC_uncertainty_percent"],fmt="none", capsize=4, alpha=0.7)
+plt.xlabel("Titrant Volume (mL)")
+plt.ylabel("Remaining DIC (%)")
+plt.legend(loc='upper right')
+plt.tight_layout()
+plt.show()
+#%%
+
+import seaborn as sns
+from scipy.optimize import curve_fit
+
+# --- Exponential model ---
+def exp_model(x, a, b, c):
+    return a * np.exp(-b * x) + c
+
+# --- Prepare data ---
+fit_df = plot_df.sort_values(by="Titrant Volume (ml)")
+
+# Include all points (no trimming)
+x = fit_df["Titrant Volume (ml)"].values
+y = fit_df["In-situ DIC (%)"].values
+yerr = fit_df["total_DIC_uncertainty_percent"]
+# Fit 4th-order polynomial: y = ax^4 + bx^3 + cx^2 + d+ e
+fit_order = 4
+coeffs, cov = np.polyfit(
+    x[:-2],
+    y[:-2],
+    fit_order,
+    cov=True
+)
+poly = np.poly1d(coeffs)
+#%%
+# 1-sigma uncertainties of coefficients
+coeff_err = np.sqrt(np.diag(cov))
+
+# Generate new x array from 0 → 4.05
+x_new = np.linspace(0, 4.05, 28)
+y_fit = poly(x_new)
+
+# Build Jacobian
+J = np.vstack([x_new**i for i in range(fit_order, -1, -1)]).T  # shape (len(x_new), 5)
+
+# y-uncertainty from coefficient covariance
+y_fit_err = np.sqrt(np.sum(J @ cov * J, axis=1))
+
+plt.figure(figsize=(8,5))
+plt.grid(True, alpha=0.4)
+
+# Scatter original data
+plt.errorbar(x, y, yerr=yerr, fmt='o', capsize=4, alpha=0.7, label='In-situ DIC')
+
+# Polynomial fit
+plt.plot(x_new, y_fit, color='black', linewidth=2, label='Polynomial fit')
+
+# Shaded error band
+plt.fill_between(x_new, y_fit - y_fit_err, y_fit + y_fit_err,
+                 color='black', alpha=0.2, label='Fit uncertainty')
+
+plt.xlabel("Titrant Volume (mL)")
+plt.ylabel("Remaining DIC (%)")
+plt.legend(loc='upper right')
+plt.tight_layout()
+plt.show()
+#%%
+
+param_names = ["a", "b", "c", "d", "e"]
+
+text_lines = [
+    f"{name} = {val:.1e} ± {err:.1e}"
+    for name, val, err in zip(param_names, coeffs, coeff_err)
+]
+
+fit_text = "4th-order polynomial fit\n" + "\n".join(text_lines)
+# --- Convert % DIC to absolute DIC ---
+ref_dic = plot_df["Reference DIC (umol/kg)"].iloc[0]
+absolute_dic = (y_fit / 100) * ref_dic
+
+# --- Store in dataframe ---
+fit_df_out = pd.DataFrame({
+    "Titrant Volume (ml)": x_new,
+    "Fitted In-situ DIC (%)": y_fit,
+    "Absolute DIC (umol/kg)": absolute_dic
+})
+
+
+fit_df.head()
+
+# Scatter plot 
+plt.figure()
+plt.grid(True,alpha =0.4)
+plt.scatter(
+    data=plot_df,
+    x="Titrant Volume (ml)",
+    y="DIC (%)",
+    s=50,
+    label = "Measured DIC",alpha = 0.7
+)
+
+plt.errorbar(x=plot_df["Titrant Volume (ml)"],y=plot_df["DIC (%)"],yerr = 0.236,fmt="none", capsize=4, alpha=0.7)
+plt.scatter(
+    data=plot_df,color = 'red',
+    x="Titrant Volume (ml)",
+    y="In-situ DIC (%)",
+    s=50,
+    label = "In-situ DIC",alpha = 0.7
+)
+plt.errorbar(x=plot_df["Titrant Volume (ml)"],y=plot_df["In-situ DIC (%)"],color = 'red', yerr = plot_df["total_DIC_uncertainty_percent"],fmt="none", capsize=4, alpha=0.7)
+plt.xlabel("Titrant Volume (mL)")
+plt.ylabel("Remaining DIC (%)")
+plt.legend(loc='upper right')
+plt.tight_layout()
+plt.show()
+
+# Plot fitted exponential model
+plt.plot(
+    fit_df_out["Titrant Volume (ml)"],
+    fit_df_out["Fitted In-situ DIC (%)"],
+    label="Polynomial fit",
+    linewidth=2, color = 'black',zorder=-1
+)
+# Text box with fit parameters
+plt.text(
+    0.02, 0.98,
+    fit_text,
+    transform=plt.gca().transAxes,
+    fontsize=9,
+    verticalalignment="top",
+    bbox=dict(boxstyle="round", facecolor="white", alpha=0.85)
+)
+plt.xlabel("Titrant Volume (ml)")
+plt.ylabel("Remaining DIC (%)")
+plt.legend(loc="upper right")
+plt.tight_layout()
+plt.show()
+
+#%% 
+#combine the fit with the alkalinity script
+
+#get one titration
+tt = calk.to_Titration(dbs, 275)
+ttt = tt.titration
+#tt.plot_alkalinity()
+totals = {k: ttt[k].values for k in ttt.columns if k.startswith("total_") or k == "dic"}
+ttt["Titrant Volume (ml)"] = np.linspace(0, 4.05,len(ttt.titrant_mass.values))
+
+totals["dic"] = np.array((fit_df_out["Absolute DIC (umol/kg)"]+ 134.38256354719806)*1e-6)
+#totals["dic"] = np.array((fit_df_out["Absolute DIC (umol/kg)"])*1e-6)
+totals["dic"] = np.array(ttt["dic"])
+# ^ make a numpy array (NOT pandas series) that is the same shape as
+# ttt.titrant_mass.values that contains whatever DIC should be!
+
+k_constants = {
+    k: ttt[k].values
+    for k in [
+        "k_alpha",
+        "k_ammonia",
+        "k_beta",
+        "k_bisulfate",
+        "k_borate",
+        "k_carbonic_1",
+        "k_carbonic_2",
+        "k_fluoride",
+        "k_phosphoric_1",
+        "k_phosphoric_2",
+        "k_phosphoric_3",
+        "k_silicate",
+        "k_sulfide",
+        "k_water",
+    ]
+}
+sr = calk.core.solve_emf(
+    tt.titrant_molinity,
+    ttt.titrant_mass.values,
+    ttt.emf.values,
+    ttt.temperature.values,
+    tt.analyte_mass,
+    totals,
+    k_constants,
+    # alkalinity_init=None,
+    # double=True,
+    # emf0_init=None,
+    # gran_logic="v23.7+",
+    # pH_min=3,
+    # pH_max=4,
+    # titrant_normality=1,
+)
+
+# Calculate expected DIC based on alkalinity and pH
+alkalinity_mixture = (
+    sr.alkalinity * tt.analyte_mass - 1e6 * tt.titrant_molinity * ttt.titrant_mass
+) / (tt.analyte_mass + ttt.titrant_mass)
+co2s = pyco2.sys(
+    par1=alkalinity_mixture.values,
+    par2=ttt.pH.values,
+    par1_type=1,
+    par2_type=3,
+    temperature=ttt.temperature.values,
+    salinity=tt.salinity,
+    opt_pH_scale=3,
+    uncertainty_from={"par1": 5, "par2": 0.01},
+    uncertainty_into=["dic"],
+)
+
+offset = co2s["dic"][0]-fit_df_out["Absolute DIC (umol/kg)"][0]
+print(f'offset is {offset} umol/kg')
+#%%
+# Plot expected DIC
+plt.figure()
+plt.scatter(ttt["Titrant Volume (ml)"], co2s["dic"],label = "Theoretical DIC prediction")
+plt.plot(ttt["Titrant Volume (ml)"], co2s["dic"] + co2s["u_dic"])
+plt.plot(ttt["Titrant Volume (ml)"], co2s["dic"] - co2s["u_dic"])
+plt.scatter(fit_df_out["Titrant Volume (ml)"],fit_df_out["Absolute DIC (umol/kg)"], label = "Model")
+plt.scatter(fit_df_out["Titrant Volume (ml)"],fit_df_out["Absolute DIC (umol/kg)"]+offset, label = "Model shifted")
+plt.xlabel("Titrant Volume (ml)")
+plt.ylabel("DIC (umol/kg)")
+plt.legend()
+plt.ylim(1500, 2800)
+
+#%%
+# # plot Expected DIC with pH 
+# plt.figure()
+# plt.scatter(ttt.pH.values, fit_df_out["Absolute DIC (umol/kg)"][0]-fit_df_out["Absolute DIC (umol/kg)"],label = "Modelled DIC loss")
+# plt.ylabel("DIC (umol/kg)")
+# plt.xlabel("pH")
+# plt.gca().invert_xaxis()
+#%%
+# plot calculated HCO3 and CO2 with pH 
+plt.figure()
+plt.grid(alpha = 0.4)
+plt.scatter(ttt.pH.values, ttt.HCO3.values*1e6,label = "HCO3")
+plt.scatter(ttt.pH.values, ttt.CO3.values*1e6, label = "CO3")
+plt.scatter(ttt.pH.values,ttt.dic.values*1e6-ttt.HCO3.values*1e6-ttt.CO3.values*1e6 , label = "CO2")
+plt.scatter(ttt.pH.values,ttt.dic.values*1e6 , label = "Total DIC")
+plt.ylabel("Concentration (umol/kg)")
+plt.xlabel("pH")
+plt.gca().invert_xaxis()
+plt.legend()
+
+#%%
+plt.figure()
+
+# --- Shaded area for theoretical DIC ± uncertainty ---
+plt.fill_between(
+    ttt["Titrant Volume (ml)"],
+    co2s["dic"] - co2s["u_dic"],
+    co2s["dic"] + co2s["u_dic"],
+    color="teal",
+    alpha=0.4,
+    label="Theoretical DIC ± uncertainty"
+)
+
+# --- Plot theoretical DIC line ---
+plt.scatter(
+    ttt["Titrant Volume (ml)"],
+    co2s["dic"],
+    color="blue",
+    s = 80,
+    marker = "X",
+    label="Theoretical DIC"
+)
+
+# --- Model points ---
+plt.scatter(
+    fit_df_out["Titrant Volume (ml)"],
+    fit_df_out["Absolute DIC (umol/kg)"],
+    color="orange",
+    s=60,
+    label="Model"
+)
+
+plt.scatter(
+    fit_df_out["Titrant Volume (ml)"],
+    fit_df_out["Absolute DIC (umol/kg)"] + offset,
+    color="red",
+    s=60,
+    label="Model shifted"
+)
+
+plt.xlabel("Titrant Volume (ml)")
+plt.ylabel("DIC (µmol/kg)")
+plt.ylim(1500, 2800)
+plt.title("DIC vs. Titrant Volume")
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+#%%
+# Plot alkalinity estimates through titration (tt.plot_alkalinity)
+fig, ax = plt.subplots(dpi=300)
+ax.scatter(ttt.titrant_mass, sr.alkalinity_all)
+ax.set_title(f'$T_A=${sr.alkalinity:.3f} $\pm$ {sr.alkalinity_std:.3f} $\mu mol/kg$' )
+ax.set_ylim(2350,2550)
+# What should the C value be?
+co2s_fco2 = pyco2.sys(
+    par1=alkalinity_mixture.values,
+    par2=500,
+    par1_type=1,
+    par2_type=5,
+    temperature=ttt.temperature.values,
+    salinity=tt.salinity,
+    uncertainty_from={"par1": 5, "par2": 50},
+    uncertainty_into=["dic"],
+)
+
+# fig, ax = plt.subplots(dpi=300)
+# ax.scatter(ttt.titrant_mass * 1e3, 100 * co2s_fco2["dic"] / co2s_fco2["dic"][0])

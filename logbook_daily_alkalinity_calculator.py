@@ -4,6 +4,7 @@ from scipy.interpolate import interp1d
 import calkulate as calk
 import PyCO2SYS as pyco2
 
+#calculated the average for daily reference measurements (indicated by "Alkalinity daily reference measurement" ==1 in the log)
 # -------------------------------------------------------------
 # FILE PATHS
 # -------------------------------------------------------------
@@ -45,7 +46,7 @@ log["date"] = pd.to_datetime(log["date"], dayfirst=True, errors="coerce", format
 # Filter only reference measurements
 ref_log = log[log["Alkalinity daily reference measurement"] == 1].copy()
 
-# Group by date AND Sample/Junk type
+# Group by date and sample type
 daily_stats = (
     ref_log
     .groupby(["date", "sample/junk"])["calkulate alkalinity"]

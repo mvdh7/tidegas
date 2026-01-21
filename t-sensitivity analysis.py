@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jan  5 11:13:18 2026
-
-@author: nicor
-"""
+from scipy.stats import linregress
+import numpy as np
+import matplotlib.pyplot as plt
 
 import pandas as pd
 import numpy as np
@@ -198,222 +195,17 @@ for date, group in log.groupby("date"):
         log.loc[idx, "Calculated in situ DIC (umol/kg)"] = D0_pct * (ref_DIC / 100)
 
 #%%
-import matplotlib.pyplot as plt
-
-# -------------------------------------------------------------
-# SENSITIVITY ANALYSIS FOR WAITING TIME == 0
-# -------------------------------------------------------------
-
-# Nominal k (already defined earlier)
-k0 = k  # s^-1
-
-# ±10% range
-k_values = np.linspace(0.9 * k0, 1.1 * k0, 50)
-
-# Select rows where waiting time == 0 and calculation exists
-mask = (
-    (log["waiting time (minutes)"] == 0) &
-    (~log["C_from_reference (%)"].isna()) &
-    (~log["Percentage DIC (%)"].isna()) &
-    (~log["Reference DIC (umol/kg)"].isna())
-)
-
-sens_df = log.loc[mask].copy()
-
-if sens_df.empty:
-    print("⚠ No rows with waiting time == 0 available for sensitivity analysis.")
-else:
-    dic_means = []
-
-    for k_test in k_values:
-        D0_pct = (
-            sens_df["C_from_reference (%)"]
-            + (sens_df["Percentage DIC (%)"] - sens_df["C_from_reference (%)"])
-            * np.exp(k_test * 95)
-        )
-
-        D0_dic = D0_pct
-        
-        dic_means.append(D0_dic.mean())
-
-    dic_means = np.array(dic_means)
-
-    # ---------------------------------------------------------
-    # PLOT
-    # ---------------------------------------------------------
-    plt.figure(figsize=(6, 4))
-    plt.plot(k_values*60, dic_means)
-    #plt.axvline(100, linestyle="--", linewidth=1)
-
-    plt.xlabel("k-values")
-    plt.ylabel("Mean in situ DIC (% of reference)")
-    plt.tight_layout()
-    plt.show()
-#%%
-import matplotlib.pyplot as plt
-
-# -------------------------------------------------------------
-# SENSITIVITY ANALYSIS FOR WAITING TIME == 0
-# -------------------------------------------------------------
-
-k0 = k  # s^-1
-k_values = np.linspace(0.9 * k0, 1.1 * k0, 50)
-
-mask = (
-    (log["waiting time (minutes)"] == 0) &
-    (~log["C_from_reference (%)"].isna()) &
-    (~log["Percentage DIC (%)"].isna()) &
-    (log["acid added (mL)"] >0.15)
-)
-# mask = (
-#     (log["waiting time (minutes)"] == 0) &
-#     (~log["C_from_reference (%)"].isna()) &
-#     (~log["Percentage DIC (%)"].isna()) &
-#     (log["acid added (mL)"] ==4.2)
-# )
-sens_df = log.loc[mask].copy()
-
-if sens_df.empty:
-    print("⚠ No rows with waiting time == 0 available for sensitivity analysis.")
-else:
-    plt.figure(figsize=(7, 5))
-
-    for idx, row in sens_df.iterrows():
-
-        D0_pct = (
-            row["C_from_reference (%)"]
-            + (row["Percentage DIC (%)"] - row["C_from_reference (%)"])
-            * np.exp(k_values * 95)
-        )
-        D0_pct_ref = (
-            row["C_from_reference (%)"]
-            + (row["Percentage DIC (%)"] - row["C_from_reference (%)"])
-            * np.exp(k0 * 95)
-        )
-        # Scatter (use plot for connected scatter)
-        plt.grid(alpha =0.4)
-        plt.plot(
-            k_values * 60,
-            D0_pct-D0_pct_ref,
-            marker="o",
-            markersize=3,
-            alpha=0.6
-        )
-
-    plt.xlabel("k (min$^{-1}$)")
-    plt.ylabel("In situ DIC (% of reference)")
-    plt.tight_layout()
-    plt.show()
-#%%
 from scipy.stats import linregress
-import matplotlib.pyplot as plt
-
-k0 = k  # s^-1
-k_values = np.linspace(0.9 * k0, 1.1 * k0, 50)
-
-mask = (
-    (log["waiting time (minutes)"] == 0) &
-    (~log["C_from_reference (%)"].isna()) &
-    (~log["Percentage DIC (%)"].isna()) &
-    (log["acid added (mL)"] > 4.05)
-)
-
-sens_df = log.loc[mask].copy()
-
-if sens_df.empty:
-    print("⚠ No rows with waiting time == 0 available for sensitivity analysis.")
-else:
-    plt.figure()
-
-    all_k = []
-    all_delta = []
-
-    for _, row in sens_df.iterrows():
-
-        D0_pct = (
-            row["C_from_reference (%)"]
-            + (row["Percentage DIC (%)"] - row["C_from_reference (%)"])
-            * np.exp(k_values * 95)
-        )
-
-        D0_pct_ref = (
-            row["C_from_reference (%)"]
-            + (row["Percentage DIC (%)"] - row["C_from_reference (%)"])
-            * np.exp(k0 * 95)
-        )
-
-        delta = D0_pct - D0_pct_ref
-
-        plt.plot(
-            k_values * 60,
-            delta,
-            marker="o",
-            markersize=3,
-            alpha=0.4,
-            linewidth=0.8
-        )
-
-        all_k.extend(k_values * 60)
-        all_delta.extend(delta)
-
-    # ---------------------------------------------------------
-    # FIT LINEAR SENSITIVITY
-    # ---------------------------------------------------------
-    slope, intercept, r, _, _ = linregress(all_k, all_delta)
-
-    k_fit = np.array([k_values.min(), k_values.max()]) * 60
-    delta_fit = slope * k_fit + intercept
-
-    plt.plot(
-        k_fit,
-        delta_fit,
-        color="black",
-        linewidth=2,
-        label="Linear sensitivity fit"
-    )
-
-    # ---------------------------------------------------------
-    # PLOT DECORATION
-    # ---------------------------------------------------------
-    plt.axhline(0, color="black", linestyle="--", linewidth=1)
-    plt.axvline(k0 * 60, color="black", linestyle=":", linewidth=1)
-
-    plt.grid(alpha=0.5)
-    plt.xlabel("Gas exchange rate k (min$^{-1}$)")
-    plt.ylabel("Δ in situ DIC (%)")
-
-
-    # Sensitivity annotation
-    text = (
-        f"Sensitivity: {slope:.3f} % per min$^{{-1}}$\n"
-        f"±10% k → ±{abs(slope * 0.1 * k0 * 60):.3f} % DIC\n"
-        f"$R^2$ = {r**2:.3f}"
-    )
-
-    plt.text(
-        0.02,
-        0.97,
-        text,
-        transform=plt.gca().transAxes,
-        verticalalignment="top",
-        bbox=dict(facecolor="white", alpha=0.85, edgecolor="none"),
-        fontsize = 14)
-    
-
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-#%%
-from scipy.stats import linregress
+import numpy as np
 import matplotlib.pyplot as plt
 
 # -------------------------------------------------------------
 # SETTINGS
 # -------------------------------------------------------------
-k0 = k  # s^-1
-k_values = np.linspace((1-0.07229351114489942)* k0, 1.07229351114489942 * k0, 50)
+k_const = k  # s^-1
+time_values = np.linspace(90, 100, 50)  # seconds
 
-# Select valid rows (waiting time = 0)
+# Select valid rows (same philosophy as before)
 mask = (
     (log["waiting time (minutes)"] == 0) &
     (~log["C_from_reference (%)"].isna()) &
@@ -424,7 +216,7 @@ mask = (
 sens_df = log.loc[mask].copy()
 
 if sens_df.empty:
-    print("⚠ No rows available for sensitivity analysis.")
+    print("⚠ No rows available for time sensitivity analysis.")
 else:
     acid_levels = np.sort(sens_df["acid added (mL)"].unique())
 
@@ -432,36 +224,38 @@ else:
     acids = []
 
     # ---------------------------------------------------------
-    # LOOP OVER ACID LEVELS
+    # LOOP OVER TITRANT VOLUMES
     # ---------------------------------------------------------
     for acid in acid_levels:
 
         sub = sens_df[sens_df["acid added (mL)"] == acid]
 
-        all_k = []
+        all_t = []
         all_delta = []
 
         for _, row in sub.iterrows():
 
+            # DIC as function of time
             D0_pct = (
                 row["C_from_reference (%)"]
                 + (row["Percentage DIC (%)"] - row["C_from_reference (%)"])
-                * np.exp(k_values * 95)
+                * np.exp(k_const * time_values)
             )
 
+            # Reference at nominal time (95 s)
             D0_pct_ref = (
                 row["C_from_reference (%)"]
                 + (row["Percentage DIC (%)"] - row["C_from_reference (%)"])
-                * np.exp(k0 * 95)
+                * np.exp(k_const * 95)
             )
 
             delta = D0_pct - D0_pct_ref
 
-            all_k.extend(k_values * 60)   # convert to min^-1
+            all_t.extend(time_values)
             all_delta.extend(delta)
 
-        # Linear fit: ΔDIC vs k
-        slope, intercept, r, _, _ = linregress(all_k, all_delta)
+        # Linear fit: ΔDIC vs time
+        slope, intercept, r, _, _ = linregress(all_t, all_delta)
 
         acids.append(acid)
         slopes.append(slope)
@@ -470,10 +264,11 @@ else:
     slopes = np.array(slopes)
 
     # ---------------------------------------------------------
-    # PLOT: SLOPE VS ACID
+    # PLOT 1: SENSITIVITY SLOPE VS TITRANT VOLUME
     # ---------------------------------------------------------
     plt.figure()
     plt.grid(alpha=0.5)
+
     plt.scatter(
         acids,
         slopes,
@@ -484,17 +279,24 @@ else:
     plt.axhline(0, color="black", linestyle="--", linewidth=1)
 
     plt.xlabel("Titrant Volume (mL)")
-    plt.ylabel(r"Sensitivity slope  $\partial(\Delta \mathrm{DIC})/\partial k$  (% min$^{-1}$)")
+    plt.ylabel(
+        r"Sensitivity slope  $\partial(\Delta \mathrm{DIC})/\partial t$  (% s$^{-1}$)"
+    )
 
-   
     plt.tight_layout()
     plt.show()
-    
+
+    # ---------------------------------------------------------
+    # PLOT 2: DIC ERROR FOR A ±5 s TIMING UNCERTAINTY
+    # ---------------------------------------------------------
+    time_uncertainty = 5  # seconds
+
     plt.figure()
     plt.grid(alpha=0.5)
+
     plt.scatter(
         acids,
-        slopes*0.0021,
+        slopes * time_uncertainty,
         s=50,
         alpha=0.8
     )
@@ -502,10 +304,10 @@ else:
     plt.axhline(0, color="black", linestyle="--", linewidth=1)
 
     plt.xlabel("Titrant Volume (mL)")
-    plt.ylabel(r"DIC error (%) resulting from $k$")
+    plt.ylabel(
+        r"DIC error (%) resulting from waiting time uncertainty"
+        + f" (±{time_uncertainty} s)"
+    )
 
-   
     plt.tight_layout()
     plt.show()
-
-

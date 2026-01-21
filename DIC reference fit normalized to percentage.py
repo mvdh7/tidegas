@@ -96,7 +96,7 @@ def plot_reference_universal(selected_dates=None):
         return
     
     plt.figure(figsize=(11, 6))
-    
+    plt.grid(True, alpha=0.3)
     # Unique sample types -> markers (shapes vary by sample type)
     sample_types = sorted(data["Sample type"].dropna().unique())
     markers = ["o", "s", "^", "D", "v", "P", "X", "*", "h"]  # extend if needed
@@ -142,9 +142,7 @@ def plot_reference_universal(selected_dates=None):
     
     plt.xlabel("Time (hours, UTC)")
     plt.ylabel("DIC w.r.t reference (%)")
-    plt.title("Reference measurements")
     plt.xticks(range(8, 16))  # universal 8:00–15:00
-    plt.grid(True, alpha=0.3)
     plt.legend(title="Date — Sample type", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize="small")
     plt.tight_layout()
     plt.show()
@@ -179,7 +177,6 @@ plt.scatter(df_fit["Hour"], y, alpha=0.5, edgecolor="black", label="Reference DI
 plt.plot(df_fit["Hour"], y_pred, color="red", linewidth=2, label=f"Linear trend: {slope:.3f} %/h")
 plt.xlabel("Time (hours UTC)")
 plt.ylabel("DIC w.r.t reference (%)")
-plt.title("Reference DIC trend over the day (all samples aggregated)")
 plt.grid(True, alpha=0.3)
 plt.legend()
 plt.tight_layout()
