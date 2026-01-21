@@ -16,7 +16,7 @@ import PyCO2SYS as pyco2
 
 
 #Apply global DIC degassing model to all reference titrations
-model = np.load(    "global_dic_degassing_model.npy",allow_pickle=True).item()
+model = np.load("global_dic_degassing_model.npy",allow_pickle=True).item()
 
 coeffs = model["coeffs"]
 
@@ -60,7 +60,7 @@ ref_df = excel_df[
 ref_df = ref_df[ref_df["sample/junk"]!= "Nuts"]
 
 # # Filter from a certain date onwards
-start_date = "10-22-2025"  # YYYY-MM-DD
+start_date = "10-22-2025"  # MM-DD-YYYY
 ref_df = ref_df[ref_df["Date"] >= start_date]
 
 ref_df = ref_df[ref_df["Date"]!= "11-10-2025"]
@@ -83,7 +83,8 @@ for ti in titration_indices:
     # ---------------------------
     tt = calk.to_Titration(dbs, ti)
     ttt = tt.titration
-
+    
+    #setup titrant volume array
     x = np.linspace(0, 4.05, len(ttt.titrant_mass))
 
     # ---------------------------

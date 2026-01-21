@@ -13,12 +13,11 @@ plt.rcParams.update({
 
 
 
-results_df = pd.read_csv("titration_plateau_results_only_full_titrations.csv")
+results_df = pd.read_csv("titration_plateau_results_only_full_titrations_titrant_mass.csv")
 results_df = results_df[results_df["file_not_good"]!="not_good"]
 results_df = results_df[results_df["sample type"]!= "Nuts"]
 # Convert date to datetime if needed
 results_df["date"] = pd.to_datetime(results_df["date"],dayfirst=True).dt.strftime("%d-%m")
-#sns.set(style="whitegrid")
 #%%
 
 # -----------------------------------------------
@@ -39,7 +38,6 @@ type_marker = {stype: markers[i] for i, stype in enumerate(sample_types)}
 # Plot
 # -----------------------------------------------
 plt.figure()
-#sns.set(style="whitegrid")
 
 for stype in sample_types:
     subset = results_df[results_df["sample type"] == stype]
@@ -55,7 +53,6 @@ for stype in sample_types:
 
 plt.xlabel("Alkalinity (µmol/kg)")
 plt.ylabel(r"Slope/($\frac{\Delta DIC (\%)}{acid (ml)}$)")
-plt.title("Slope (Titrant Volume) vs Sample Type")
 plt.legend(title="Sample Type",fontsize = 14)
 plt.tight_layout()
 plt.show()
@@ -77,7 +74,6 @@ for stype in sample_types:
 
 plt.xlabel("Alkalinity (µmol/kg)")
 plt.ylabel(r"Slope/($\frac{\Delta DIC (\%)}{acid (mM)}$)")
-plt.title("Slope (Titrant Volume) vs Sample Type")
 plt.legend(title="Sample Type",fontsize = 14)
 plt.tight_layout()
 plt.show()
@@ -85,7 +81,6 @@ plt.show()
 # ----- FIGURE 1: Slope vs Date -----
 plt.figure(figsize=(10,5))
 plt.scatter(results_df["date"], results_df["slope"])
-#plt.plot(results_df["date"], results_df["slope"], alpha=0.4)
 plt.xlabel("Date")
 plt.ylabel("Slope of early C%")
 plt.title("Slope of Early C% vs Date")
@@ -96,7 +91,6 @@ plt.show()
 # ----- FIGURE 1: Slope vs Date -----
 plt.figure(figsize=(10,5))
 plt.scatter(results_df["sample type"], results_df["slope"])
-#plt.plot(results_df["sample type"], results_df["slope"], alpha=0.4)
 plt.xlabel("sample type")
 plt.ylabel("Slope of early C%")
 plt.title("Slope of Early C% vs Sample Type")
@@ -109,12 +103,8 @@ plt.scatter(results_df[results_df["sample type"]=="Nose"]["Alkalinity"], results
 plt.scatter(results_df[results_df["sample type"]=="Junk_old"]["Alkalinity"], results_df[results_df["sample type"]=="Junk_old"]["slope"],label = "Old junk")
 plt.scatter(results_df[results_df["sample type"]=="Junk_old_2"]["Alkalinity"], results_df[results_df["sample type"]=="Junk_old_2"]["slope"],label = "Old junk 2")
 plt.scatter(results_df[results_df["sample type"]=="Junk_old_3"]["Alkalinity"], results_df[results_df["sample type"]=="Junk_old_3"]["slope"],label = "Old junk 3")
-
-#plt.scatter(results_df[results_df["sample type"]=="Junk"]["Alkalinity"], results_df[results_df["sample type"]=="Junk"]["slope"])
-#plt.plot(results_df["sample type"], results_df["slope"], alpha=0.4)
 plt.xlabel("Alkalinity")
 plt.ylabel("Slope of early C%")
-plt.title("Slope of Early C% vs Sample type")
 plt.legend()
 plt.tight_layout()
 plt.show()

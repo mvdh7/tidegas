@@ -14,7 +14,7 @@ plt.rcParams.update({         # Set standard fontsizes for plot labels
      })
 
 folder_path = "data/vindta/r2co2/Bobometer"
-file_path = "data/vindta/r2co2/Bobometer/co2data (15).txt"
+file_path = "data/vindta/r2co2/Bobometer/co2data 10-11 (4).txt"
 
 
 
@@ -28,7 +28,7 @@ plt.xlabel("time in [s]")
 #%%
 plt.figure()
 
-plt.plot(file[" Cell[uAs]"][100:200])
+plt.plot(file[" Cell[uAs]"])
 plt.ylabel("integrated current [uAs]")
 plt.xlabel("time in [s]")
 #%%
