@@ -1,3 +1,5 @@
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.18338456-informational)](https://doi.org/10.5281/zenodo.18338456)
+
 # Titration degassing
 
 ## Introduction
