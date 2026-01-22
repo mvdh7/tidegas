@@ -97,7 +97,7 @@ sns.scatterplot(
     data=plot_df,
     x="Titrant Volume (ml)",
     y="In-situ DIC (%)",
-    alpha=0.4,
+    alpha=0.8,
     label="Individual measurements"
 )
 
@@ -121,7 +121,33 @@ plt.fill_between(
     alpha=0.2,
     label="Model uncertainty"
 )
+# setup for writing the equation in the plot
+terms = [
+    (coeffs[0], "x⁴"),
+    (coeffs[1], "x³"),
+    (coeffs[2], "x²"),
+    (coeffs[3], "x"),
+    (coeffs[4], "")
+]
 
+eqn = "y = "
+for i, (c, term) in enumerate(terms):
+    sign = "−" if c < 0 else "+"
+    mag = abs(c)
+
+    # First term: no leading "+"
+    if i == 0:
+        eqn += f"{mag:.2f}{term} "
+    else:
+        eqn += f"{sign} {mag:.2f}{term} "
+# --- Add equation to plot (bottom left) ---
+plt.text(
+    0.02, 0.05, eqn,
+    transform=plt.gca().transAxes,  # axis-relative positioning
+    fontsize=14,
+    verticalalignment="bottom",
+    bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8)
+)
 plt.xlabel("Titrant volume (mL)")
 plt.ylabel("Remaining DIC (%)")
 plt.legend()

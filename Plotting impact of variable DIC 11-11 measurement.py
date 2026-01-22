@@ -7,14 +7,11 @@ Created on Sat Nov 29 11:31:57 2025
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 import matplotlib.dates as mdates
-from scipy.interpolate import CubicSpline
 import calkulate as calk
 import PyCO2SYS as pyco2
-from matplotlib import pyplot as plt
-import pandas as pd
-import numpy as np 
+
+
 
 #setup plotting parameters to make everything bigger
 plt.rcParams.update({         # Set standard fontsizes for plot labels
@@ -136,14 +133,6 @@ plt.legend(loc='upper right')
 plt.tight_layout()
 plt.show()
 #%%
-
-import seaborn as sns
-from scipy.optimize import curve_fit
-
-# --- Exponential model ---
-def exp_model(x, a, b, c):
-    return a * np.exp(-b * x) + c
-
 # --- Prepare data ---
 fit_df = plot_df.sort_values(by="Titrant Volume (ml)")
 
@@ -274,7 +263,7 @@ ttt = tt.titration
 totals = {k: ttt[k].values for k in ttt.columns if k.startswith("total_") or k == "dic"}
 ttt["Titrant Volume (ml)"] = np.linspace(0, 4.05,len(ttt.titrant_mass.values))
 
-totals["dic"] = np.array((fit_df_out["Absolute DIC (umol/kg)"]+ 134.38256354719806)*1e-6)
+totals["dic"] = np.array((fit_df_out["Absolute DIC (umol/kg)"]+  136.50033657705944)*1e-6)
 #totals["dic"] = np.array((fit_df_out["Absolute DIC (umol/kg)"])*1e-6)
 totals["dic"] = np.array(ttt["dic"])
 # ^ make a numpy array (NOT pandas series) that is the same shape as
@@ -400,7 +389,7 @@ k_constants = {
 # ---------------------------------------------------------------
 dic_variants = {"DIC dilution":     np.array(ttt["dic"]),
    "DIC degassing":    np.array((fit_df_out["Absolute DIC (umol/kg)"]) * 1e-6),
-   "DIC degassing shfited":  np.array((fit_df_out["Absolute DIC (umol/kg)"] + 134.38256354719806) * 1e-6),
+   "DIC degassing shfited":  np.array((fit_df_out["Absolute DIC (umol/kg)"] + offset) * 1e-6),
 }
 
 variant_results = {}
@@ -502,9 +491,9 @@ plt.show()
 dic_variants = {
     "DIC dilution": np.array(ttt["dic"]),
     "DIC degassing": np.array(fit_df_out["Absolute DIC (umol/kg)"] * 1e-6),
-    "DIC degassing shifted": np.array((fit_df_out["Absolute DIC (umol/kg)"] + 134.38256354719806) * 1e-6),
-    "DIC degassing shifted_upper": np.array((fit_df_out["Absolute DIC (umol/kg)"]*(1+y_fit_err/100) + 134.38256354719806) * 1e-6),
-    "DIC degassing shifted_lower": np.array((fit_df_out["Absolute DIC (umol/kg)"]*(1-y_fit_err/100) + 134.38256354719806) * 1e-6),
+    "DIC degassing shifted": np.array((fit_df_out["Absolute DIC (umol/kg)"] + offset) * 1e-6),
+    "DIC degassing shifted_upper": np.array((fit_df_out["Absolute DIC (umol/kg)"]*(1+y_fit_err/100) + offset) * 1e-6),
+    "DIC degassing shifted_lower": np.array((fit_df_out["Absolute DIC (umol/kg)"]*(1-y_fit_err/100) + offset) * 1e-6),
     "DIC degassing_upper": np.array(fit_df_out["Absolute DIC (umol/kg)"]*(1+y_fit_err/100) * 1e-6),
     "DIC degassing_lower": np.array(fit_df_out["Absolute DIC (umol/kg)"]*(1-y_fit_err/100) * 1e-6)
 }

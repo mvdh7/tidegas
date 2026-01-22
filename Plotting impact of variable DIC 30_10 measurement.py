@@ -5,23 +5,12 @@ Created on Thu Jan 15 14:35:32 2026
 @author: nicor
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Nov 29 11:31:57 2025
-
-@author: nicor
-"""
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 import matplotlib.dates as mdates
-from scipy.interpolate import CubicSpline
 import calkulate as calk
 import PyCO2SYS as pyco2
-from matplotlib import pyplot as plt
-import pandas as pd
-import numpy as np 
 
 #setup plotting parameters to make everything bigger
 plt.rcParams.update({         # Set standard fontsizes for plot labels
@@ -144,13 +133,6 @@ plt.tight_layout()
 plt.show()
 #%%
 
-import seaborn as sns
-from scipy.optimize import curve_fit
-
-# --- Exponential model ---
-def exp_model(x, a, b, c):
-    return a * np.exp(-b * x) + c
-
 # --- Prepare data ---
 fit_df = plot_df.sort_values(by="Titrant Volume (ml)")
 
@@ -161,8 +143,8 @@ yerr = fit_df["total_DIC_uncertainty_percent"]
 # Fit 4th-order polynomial: y = ax^4 + bx^3 + cx^2 + d+ e
 fit_order = 4
 coeffs, cov = np.polyfit(
-    x[:-2],
-    y[:-2],
+    x[:-3],
+    y[:-3],
     fit_order,
     cov=True
 )
@@ -370,7 +352,7 @@ plt.scatter(fit_df_out["Titrant Volume (ml)"],
             label="DIC degassing")
 
 # Model shifted points
-plt.scatter(fit_df_out["Titrant Volume (ml)"] + 0,  # if offset is already applied separately
+plt.scatter(fit_df_out["Titrant Volume (ml)"],  # if offset is already applied separately
             fit_df_out["Absolute DIC (umol/kg)"] + offset,
             color='orange',
             label="DIC degassing shifted")

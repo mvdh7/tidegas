@@ -117,7 +117,7 @@ y_std = np.nan_to_num(y_std, nan=1.0)
 
 # --- Fit cubic polynomial to mean values ---
 # Use weights = 1 / std to account for variability
-coeffs = np.polyfit(x_unique, y_mean, 4, w=1/y_std)
+coeffs = np.polyfit(x_unique, y_mean, 4)
 poly = np.poly1d(coeffs)
 
 # --- Evaluate fit on fine x-grid ---
