@@ -1,0 +1,16 @@
+{
+    "title": "Tidegas: CO2 degassing correction for alkalinity titrations", 
+    "license": "GPL-3.0-only", 
+    "creators": [
+         {
+            "affiliation": "University of Twente, Enschede, the Netherlands", 
+            "name": "Remkes, Nico B.",
+            "orcid": "0000-0003-1528-5283"
+        },
+        {
+            "affiliation": "NIOZ Royal Netherlands Institute for Sea Research, Texel, the Netherlands", 
+            "name": "Humphreys, Matthew P.",
+            "orcid": "0000-0002-9371-7128"
+        }
+    ]
+}
